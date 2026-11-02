@@ -580,7 +580,10 @@
   padding: 56px 24px 40px;
   display: grid;
   place-items: center;
-  overflow: hidden;
+  /* 只裁横向溢出（唱片光晕、网格底纹），纵向必须放行：
+     注册表单比小屏视口高，overflow:hidden 会让整页无法滚动，底部直接被裁掉 */
+  overflow-x: hidden;
+  overflow-y: auto;
   color: #fff;
   background:
     radial-gradient(900px 520px at 10% 6%, rgba(229, 50, 63, 0.2), transparent 62%),
