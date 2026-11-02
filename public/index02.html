@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>作品详情 · 余音的小破站</title>
+  <meta name="description" content="查看漫画的作者、题材、评分、最新话数与简介，并可加入追漫清单。">
+  <meta name="theme-color" content="#10121a">
+  <!-- 样式按层拆分：基础 → 骨架 → 组件 → 页面 → 响应式 -->
+  <link rel="stylesheet" href="css/base.css">
+  <link rel="stylesheet" href="css/layout.css">
+  <link rel="stylesheet" href="css/components.css">
+  <link rel="stylesheet" href="css/pages.css">
+  <link rel="stylesheet" href="css/responsive.css">
+  <link rel="icon" href="imgs/offen/webtitle.png" sizes="any">
+</head>
+
+<!-- 作品详情页：通过 ?id= 取数，章节与相关推荐由 js/pages/detail.js 生成 -->
+<body data-page="detail">
+  <header id="app-nav"></header>
+
+  <main>
+    <!-- 作品概览：背景取封面模糊图，信息区由 detail.js 填充 -->
+    <section class="detail-hero">
+      <div class="detail-hero-bg" id="dHeroBg" aria-hidden="true"></div>
+      <div class="container">
+        <nav class="crumbs" aria-label="面包屑">
+          <a href="index.html">首页</a>
+          <span>/</span>
+          <a href="category.html">漫画分类</a>
+          <span>/</span>
+          <span id="dCrumb" style="opacity:1;color:rgba(255,255,255,.82)">详情</span>
+        </nav>
+
+        <div class="detail-grid">
+          <figure class="detail-cover">
+            <img id="dCover" src="imgs/1/咒术_450x600_86.jpg" alt="封面">
+          </figure>
+
+          <div class="detail-info">
+            <h1 id="dTitle">咒术回战</h1>
+            <p class="detail-author">
+              作者：<span id="dAuthor">芥见下下</span>
+              <span class="detail-heat" id="dHeat">—</span>
+            </p>
+
+            <div class="detail-tags" id="dTags"></div>
+
+            <div class="detail-stats">
+              <div><b id="dRating">4.9</b><span id="dRatingLabel">用户评分</span></div>
+              <div><b id="dStatus">连载中</b><span>连载状态</span></div>
+              <div><b id="dChapter">第237话</b><span>最新进度</span></div>
+              <div><b id="dUpdate">今天</b><span>最近更新</span></div>
+            </div>
+
+            <p class="detail-desc" id="dDesc"></p>
+            <button class="desc-toggle" id="descToggle" type="button">展开简介</button>
+
+            <div class="detail-actions">
+              <a class="btn btn-primary" id="dRead" href="#" target="_blank" rel="noopener noreferrer">
+                <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+                  <path d="M8 5.5v13l11-6.5-11-6.5z" />
+                </svg>
+                <span>阅读最新一话</span>
+              </a>
+              <button class="btn btn-ghost" id="dFav" type="button" aria-pressed="false">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round" aria-hidden="true">
+                  <path d="M12 20s-7.5-4.6-9.3-9A5.2 5.2 0 0 1 12 6.5 5.2 5.2 0 0 1 21.3 11c-1.8 4.4-9.3 9-9.3 9z" />
+                </svg>
+                <span>加入追漫</span>
+              </button>
+            </div>
+            <!-- 章节偶尔会失效，留一个原站作品页的兜底入口 -->
+            <a class="detail-src" id="dSrc" href="#" target="_blank" rel="noopener noreferrer" hidden>
+              打不开章节？去原站作品页
+            </a>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <div class="container">
+      <!-- 章节列表：数据里保存了最近 16 话的真实章节 id，可直达原站 -->
+      <section class="chapter-panel" aria-label="章节列表">
+        <div class="panel-title" style="margin-bottom:18px">
+          章节列表
+          <span style="font-weight:400" id="chapterNote">最近章节</span>
+        </div>
+        <div class="chapter-grid" id="chapterGrid"></div>
+      </section>
+
+      <!-- 相关推荐：同题材优先，其次同地区 -->
+      <section class="section" style="padding-bottom:0">
+        <div class="section-head">
+          <h2 class="section-title">
+            相关推荐
+            <small>同题材或同地区的作品</small>
+          </h2>
+          <a class="link-more" href="category.html">
+            浏览全部
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <path d="M5 12h13M13 6l6 6-6 6" />
+            </svg>
+          </a>
+        </div>
+        <div class="grid" id="relatedGrid"></div>
+      </section>
+    </div>
+  </main>
+
+  <footer id="app-footer"></footer>
+
+  <script src="js/data.js"></script>
+  <script src="js/core.js"></script>
+  <script src="js/ui/nav.js"></script>
+  <script src="js/ui/footer.js"></script>
+  <script src="js/ui/card.js"></script>
+  <script src="js/ui/mascot.js"></script>
+  <script src="js/pages/detail.js"></script>
+  <script src="js/app.js"></script>
+</body>
+
+</html>

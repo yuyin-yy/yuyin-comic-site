@@ -1,0 +1,555 @@
+/* ==========================================================================
+   components.css · 组件层
+   与具体页面无关的复用组件：按钮、区块标题、漫画卡片、排行面板、
+   看板娘、Toast、滚动进场动画。
+   ========================================================================== */
+
+/* ---------- 按钮 ---------- */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  height: 44px;
+  padding: 0 22px;
+  border-radius: 999px;
+  font-size: 14.5px;
+  font-weight: 600;
+  white-space: nowrap;
+  transition: transform 0.18s var(--ease), box-shadow 0.22s var(--ease),
+    background 0.2s, color 0.2s, border-color 0.2s;
+}
+
+.btn:active { transform: scale(0.97); }
+
+.btn-primary {
+  background: var(--accent);
+  color: #fff;
+  box-shadow: 0 8px 20px rgba(229, 50, 63, 0.28);
+}
+.btn-primary:hover {
+  background: var(--accent-dark);
+  box-shadow: 0 12px 26px rgba(229, 50, 63, 0.34);
+  color: #fff;
+}
+
+.btn-ghost {
+  background: #fff;
+  color: var(--ink);
+  border: 1px solid var(--line-strong);
+}
+.btn-ghost:hover { border-color: var(--ink); background: #fff; }
+
+.btn-dark {
+  background: var(--ink);
+  color: #fff;
+}
+.btn-dark:hover { background: #000; color: #fff; }
+
+.btn-sm { height: 36px; padding: 0 16px; font-size: 13.5px; }
+.btn-block { width: 100%; }
+
+.btn[disabled] { opacity: 0.55; pointer-events: none; }
+
+.btn svg { width: 16px; height: 16px; }
+
+/* ---------- 区块与标题 ---------- */
+.section { padding: 56px 0; }
+.section + .section { padding-top: 0; }
+
+.section-head {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 26px;
+}
+
+.section-title {
+  font-size: 24px;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  line-height: 1.25;
+}
+
+.section-title small {
+  display: block;
+  margin-top: 6px;
+  font-size: 13.5px;
+  font-weight: 400;
+  letter-spacing: 0;
+  color: var(--muted);
+}
+
+.link-more {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 13.5px;
+  font-weight: 600;
+  color: var(--ink-soft);
+  white-space: nowrap;
+}
+
+.link-more svg { width: 14px; height: 14px; transition: transform 0.2s var(--ease); }
+.link-more:hover { color: var(--accent); }
+.link-more:hover svg { transform: translateX(3px); }
+
+/* 分段切换 */
+.segmented {
+  display: inline-flex;
+  padding: 4px;
+  gap: 2px;
+  border-radius: 999px;
+  background: #eae7e1;
+}
+
+.segmented button {
+  padding: 8px 18px;
+  white-space: nowrap;
+  border-radius: 999px;
+  font-size: 13.5px;
+  font-weight: 600;
+  color: var(--muted);
+  transition: all 0.2s var(--ease);
+}
+
+.segmented button[aria-selected="true"] {
+  background: #fff;
+  color: var(--ink);
+  box-shadow: var(--shadow-xs);
+}
+
+/* ---------- 漫画卡片 ---------- */
+.grid {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 26px 20px;
+}
+
+.grid-tight { gap: 18px 14px; }
+
+.card {
+  position: relative;
+  display: block;
+  border-radius: var(--radius);
+  transition: transform 0.28s var(--ease);
+}
+
+.card:hover { transform: translateY(-6px); }
+
+.card-cover {
+  position: relative;
+  border-radius: var(--radius);
+  overflow: hidden;
+  aspect-ratio: 3 / 4;
+  background: linear-gradient(160deg, #e9e6e0, #f6f4f0);
+  box-shadow: var(--shadow-sm);
+  transition: box-shadow 0.3s var(--ease);
+}
+
+.card:hover .card-cover { box-shadow: var(--shadow-md); }
+
+.card-cover img {
+  width: 100%; height: 100%;
+  object-fit: cover;
+  transition: transform 0.5s var(--ease);
+}
+
+.card:hover .card-cover img { transform: scale(1.045); }
+
+.card-cover::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(0deg, rgba(10, 12, 18, 0.55) 0%, rgba(10, 12, 18, 0) 42%);
+  opacity: 0;
+  transition: opacity 0.3s var(--ease);
+}
+
+.card:hover .card-cover::after { opacity: 1; }
+
+.card-link {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+}
+
+.card-badges {
+  position: absolute;
+  top: 10px; left: 10px;
+  display: flex;
+  gap: 6px;
+  z-index: 2;
+}
+
+.badge {
+  padding: 3px 8px;
+  border-radius: 999px;
+  font-size: 11px;
+  font-weight: 600;
+  line-height: 1.5;
+  background: rgba(255, 255, 255, 0.92);
+  color: var(--ink);
+  backdrop-filter: blur(4px);
+}
+
+.badge-accent { background: var(--accent); color: #fff; }
+.badge-dark { background: rgba(20, 22, 28, 0.78); color: #fff; }
+
+.card-rating {
+  position: absolute;
+  top: 10px; right: 10px;
+  z-index: 2;
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  padding: 3px 8px;
+  border-radius: 999px;
+  background: rgba(20, 22, 28, 0.62);
+  color: #fff;
+  font-size: 11.5px;
+  font-weight: 700;
+  backdrop-filter: blur(4px);
+}
+
+.card-rating svg { width: 10px; height: 10px; color: var(--gold); }
+
+.card-fav {
+  position: absolute;
+  right: 10px; bottom: 10px;
+  z-index: 3;
+  display: grid;
+  place-items: center;
+  width: 34px; height: 34px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.94);
+  color: var(--ink);
+  opacity: 0;
+  transform: translateY(6px);
+  transition: all 0.24s var(--ease);
+  box-shadow: var(--shadow-sm);
+}
+
+.card:hover .card-fav,
+.card-fav.is-active { opacity: 1; transform: translateY(0); }
+.card-fav:hover { background: #fff; color: var(--accent); }
+.card-fav.is-active { color: var(--accent); }
+.card-fav svg { width: 16px; height: 16px; }
+
+.card-body { padding: 12px 2px 0; }
+
+.card-title {
+  display: block;
+  font-size: 14.5px;
+  font-weight: 650;
+  line-height: 1.45;
+  letter-spacing: -0.01em;
+  display: -webkit-box;
+  -webkit-line-clamp: 1;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.card:hover .card-title { color: var(--accent); }
+
+.card-meta {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 6px;
+  font-size: 12.5px;
+  color: var(--muted);
+  white-space: nowrap;
+  overflow: hidden;
+}
+
+.card-meta .dot { width: 3px; height: 3px; border-radius: 50%; background: var(--line-strong); flex: none; }
+.card-meta .chap { color: var(--accent); font-weight: 600; }
+.card-meta .status-done { color: #5c8a72; }
+
+/* 横向榜单条目 */
+/* 侧栏只有 320px，条目必须显式允许收缩，
+   否则长标题（如「高武进化：从觉醒怪物之王开始」）会把整行撑出面板。 */
+.rank-list {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 2px;
+}
+
+.rank-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+  padding: 10px;
+  border-radius: 12px;
+  transition: background 0.2s var(--ease);
+}
+
+.rank-item:hover { background: #fff; box-shadow: var(--shadow-xs); }
+
+.rank-no {
+  width: 22px;
+  flex: none;
+  font-size: 15px;
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+  color: var(--muted-2);
+  text-align: center;
+}
+
+.rank-item:nth-child(1) .rank-no { color: var(--accent); }
+.rank-item:nth-child(2) .rank-no { color: #e8791f; }
+.rank-item:nth-child(3) .rank-no { color: var(--gold); }
+
+.rank-thumb {
+  width: 34px; height: 46px;
+  border-radius: 7px;
+  object-fit: cover;
+  flex: none;
+  box-shadow: var(--shadow-xs);
+}
+
+.rank-info {
+  min-width: 0;
+  flex: 1 1 0%;
+  overflow: hidden;
+}
+
+.rank-info b {
+  display: block;
+  font-size: 14px;
+  font-weight: 600;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.rank-info span {
+  display: block;
+  margin-top: 3px;
+  font-size: 12px;
+  color: var(--muted);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.rank-heat {
+  flex: none;
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--muted-2);
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.02em;
+}
+
+
+/* 侧栏面板 / 榜单 / 更新列表 ------------------------------------------------ */
+
+.panel {
+  border-radius: var(--radius-lg);
+  background: var(--surface);
+  border: 1px solid var(--line);
+  padding: 22px;
+}
+
+.panel-title {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 12px;
+  font-size: 16px;
+  font-weight: 750;
+  letter-spacing: -0.01em;
+}
+
+.panel-title span {
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--muted);
+}
+
+.panel + .panel { margin-top: 20px; }
+
+/* 最新更新 */
+.update-list { display: grid; }
+
+.update-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 9px 0;
+  border-bottom: 1px dashed var(--line);
+  font-size: 13.5px;
+}
+
+.update-item:last-child { border-bottom: 0; }
+
+.update-item .u-title {
+  flex: 1;
+  min-width: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.update-item .u-time { color: var(--muted-2); font-size: 12px; }
+
+
+/* ---------- 站娘（左下角 + 表情按钮收起/弹出） ---------- */
+.mascot {
+  position: fixed;
+  left: 16px;
+  bottom: 0;
+  z-index: 800;
+  display: flex;
+  align-items: flex-end;
+  gap: 8px;
+  transition: transform 0.45s var(--ease), opacity 0.3s var(--ease);
+}
+
+/* 收起后整组滑出屏幕，但表情按钮仍在（见 .mascot-toggle） */
+.mascot.hidden {
+  transform: translateX(-140%);
+  opacity: 0;
+  pointer-events: none;
+}
+
+.mascot-btn {
+  display: block;
+  width: 104px;
+  padding: 0;
+  line-height: 0;
+  filter: drop-shadow(0 12px 26px rgba(20, 22, 28, 0.24));
+  transition: transform 0.3s var(--ease);
+  transform-origin: bottom center;
+}
+
+.mascot-btn img { width: 100%; height: auto; }
+
+.mascot-btn:hover { transform: translateY(-6px) rotate(2deg); }
+.mascot-btn:active { transform: scale(0.94); }
+.mascot-btn.bounce { animation: mascotBounce 0.5s var(--ease); }
+
+@keyframes mascotBounce {
+  0% { transform: scale(1); }
+  35% { transform: scale(1.08, 0.92) translateY(4px); }
+  65% { transform: scale(0.96, 1.05) translateY(-8px); }
+  100% { transform: scale(1); }
+}
+
+/* 对话气泡：位于角色右侧，尾巴朝左 */
+.mascot-bubble {
+  position: relative;
+  max-width: 232px;
+  margin-bottom: 76px;
+  padding: 11px 15px;
+  border-radius: 14px;
+  background: #fff;
+  border: 1px solid var(--line);
+  box-shadow: var(--shadow-md);
+  font-size: 12.5px;
+  line-height: 1.65;
+  color: var(--ink-soft);
+  opacity: 0;
+  transform: translateY(8px) scale(0.96);
+  transform-origin: bottom left;
+  transition: opacity 0.25s var(--ease), transform 0.25s var(--ease);
+  pointer-events: none;
+}
+
+.mascot-bubble.show { opacity: 1; transform: none; pointer-events: auto; }
+
+.mascot-bubble::after {
+  content: "";
+  position: absolute;
+  left: -5px;
+  bottom: 16px;
+  width: 10px;
+  height: 10px;
+  background: #fff;
+  border-left: 1px solid var(--line);
+  border-bottom: 1px solid var(--line);
+  transform: rotate(45deg);
+}
+
+.mascot-bubble b { color: var(--accent); font-weight: 700; }
+
+/* 表情按钮：始终可见，用于收起 / 叫回站娘 */
+.mascot-toggle {
+  position: fixed;
+  left: 16px;
+  bottom: 114px;
+  z-index: 801;
+  display: grid;
+  place-items: center;
+  width: 42px;
+  height: 34px;
+  border-radius: 11px;
+  background: #fff;
+  border: 1px solid var(--line);
+  box-shadow: var(--shadow-sm);
+  color: var(--ink-soft);
+  font-size: 12px;
+  letter-spacing: 0.02em;
+  transition: bottom 0.35s var(--ease), transform 0.2s var(--ease), color 0.2s;
+}
+
+/* 收起时按钮自动落到左下角 */
+.mascot.hidden + .mascot-toggle { bottom: 16px; }
+
+.mascot-toggle:hover { transform: translateY(-2px); border-color: var(--line-strong); color: var(--accent); }
+
+/* ---------- Toast ---------- */
+.toast-wrap {
+  position: fixed;
+  left: 50%;
+  bottom: 34px;
+  z-index: 1200;
+  transform: translateX(-50%);
+  display: grid;
+  gap: 8px;
+  justify-items: center;
+  pointer-events: none;
+}
+
+.toast {
+  padding: 11px 20px;
+  border-radius: 999px;
+  background: rgba(20, 22, 28, 0.94);
+  color: #fff;
+  font-size: 13.5px;
+  box-shadow: var(--shadow-md);
+  animation: toastIn 0.24s var(--ease);
+  backdrop-filter: blur(6px);
+}
+
+.toast.out { animation: toastOut 0.24s var(--ease) forwards; }
+
+@keyframes toastIn {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes toastOut {
+  to { opacity: 0; transform: translateY(8px); }
+}
+
+/* ---------- 滚动进场（渐进增强：默认可见，不依赖 JS） ---------- */
+@keyframes rise {
+  from { opacity: 0; transform: translateY(16px); }
+  to { opacity: 1; transform: none; }
+}
+
+.reveal.in {
+  animation: rise 0.62s var(--ease) both;
+  animation-delay: var(--d, 0ms);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .reveal, .card, .card-cover img, .mascot img { transition: none !important; }
+  .reveal.in { animation: none; }
+  html { scroll-behavior: auto; }
+}

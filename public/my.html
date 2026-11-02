@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>我的追漫 · 余音的小破站</title>
+  <meta name="description" content="查看你加入追漫清单的作品，记录保存在本地浏览器。">
+  <meta name="theme-color" content="#f5f3ef">
+  <!-- 样式按层拆分：基础 → 骨架 → 组件 → 页面 → 响应式 -->
+  <link rel="stylesheet" href="css/base.css">
+  <link rel="stylesheet" href="css/layout.css">
+  <link rel="stylesheet" href="css/components.css">
+  <link rel="stylesheet" href="css/pages.css">
+  <link rel="stylesheet" href="css/responsive.css">
+  <link rel="icon" href="imgs/offen/webtitle.png" sizes="any">
+</head>
+
+<!-- 我的追漫：读取本地收藏，逻辑见 js/pages/my.js -->
+<body data-page="my">
+  <header id="app-nav"></header>
+
+  <main>
+    <!-- 顶部：收藏数量与账号状态 -->
+    <section class="my-head">
+      <div class="container">
+        <div class="row">
+          <!-- 头像：登录后显示默认头像（js/pages/my.js 注入），未登录时是人形占位 -->
+          <div class="my-id">
+            <span class="my-avatar" id="myAvatar" aria-hidden="true"></span>
+            <div>
+              <h1>我的追漫</h1>
+              <p>共 <b id="myCount" style="color:var(--ink)">0</b> 部作品 · 当前账号 <b id="myUser" style="color:var(--ink)">未登录</b></p>
+            </div>
+          </div>
+          <div style="display:flex;gap:10px;flex-wrap:wrap">
+            <a class="btn btn-ghost btn-sm" id="myLoginBtn" href="Login.html">登录 / 注册</a>
+            <button class="btn btn-ghost btn-sm" id="clearFavs" type="button">清空记录</button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="my-body">
+      <div class="container">
+        <!-- 空状态：无收藏时展示引导 -->
+        <div id="myEmpty" style="display:none">
+          <div class="my-empty">
+            <div class="ico">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round" aria-hidden="true">
+                <path d="M12 20s-7.5-4.6-9.3-9A5.2 5.2 0 0 1 12 6.5 5.2 5.2 0 0 1 21.3 11c-1.8 4.4-9.3 9-9.3 9z" />
+              </svg>
+            </div>
+            <h2>追漫清单还是空的</h2>
+            <p>在任意作品卡片右下角点击爱心，或在详情页点击「加入追漫」。</p>
+            <a class="btn btn-primary" href="category.html">去挑几部喜欢的</a>
+          </div>
+        </div>
+
+        <!-- 收藏列表：按加入顺序展示 -->
+        <div class="grid" id="myGrid"></div>
+
+        <div class="section" style="padding-bottom:0">
+          <div class="section-head">
+            <h2 class="section-title">
+              你可能还想看
+              <small>根据全站热度为你挑选</small>
+            </h2>
+            <a class="link-more" href="category.html">
+              浏览全部
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <path d="M5 12h13M13 6l6 6-6 6" />
+              </svg>
+            </a>
+          </div>
+          <div class="grid" id="mySuggest"></div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer id="app-footer"></footer>
+
+  <script src="js/data.js"></script>
+  <script src="js/core.js"></script>
+  <script src="js/ui/nav.js"></script>
+  <script src="js/ui/footer.js"></script>
+  <script src="js/ui/card.js"></script>
+  <script src="js/ui/mascot.js"></script>
+  <script src="js/pages/my.js"></script>
+  <script src="js/app.js"></script>
+</body>
+
+</html>

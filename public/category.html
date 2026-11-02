@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>漫画分类 · 余音的小破站</title>
+  <meta name="description" content="按题材、地区、受众、连载进度与热度筛选全部收录作品，支持关键词搜索与分页浏览。">
+  <meta name="theme-color" content="#101218">
+  <!-- 样式按层拆分：基础 → 骨架 → 组件 → 页面 → 响应式；本页额外引入筛选面板样式 -->
+  <link rel="stylesheet" href="css/base.css">
+  <link rel="stylesheet" href="css/layout.css">
+  <link rel="stylesheet" href="css/components.css">
+  <link rel="stylesheet" href="css/pages.css">
+  <link rel="stylesheet" href="css/filter.css">
+  <link rel="stylesheet" href="css/responsive.css">
+  <link rel="icon" href="imgs/offen/webtitle.png" sizes="any">
+</head>
+
+<!-- 分类页：五行筛选条件 + 分页网格。支持 ?q / ?tag / ?region / ?audience / ?status / ?sort / ?page（见 js/pages/category.js） -->
+<body data-page="category">
+  <header id="app-nav"></header>
+
+  <main>
+    <!-- 页头：背景取当前热度第一的封面，由脚本注入 -->
+    <section class="cat-hero">
+      <div class="cat-hero-bg" id="catHeroBg" aria-hidden="true"></div>
+      <div class="container">
+        <nav class="cat-crumb" aria-label="面包屑">
+          <a href="index.html">首页</a>
+          <span>&gt;</span>
+          <span>漫画分类</span>
+        </nav>
+        <h1>漫画分类</h1>
+        <p>按题材、地区、受众、连载进度和热度组合筛选，点一下就能落到想要的那一类。</p>
+      </div>
+    </section>
+
+    <div class="container">
+      <!-- 筛选卡片：条件行由 category.js 根据数据统计生成 -->
+      <section class="filter-card" aria-label="漫画筛选">
+        <div class="filter-bar">
+          <h2><i>≡</i>漫画筛选</h2>
+          <div class="filter-tools">
+            <label class="filter-search">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true">
+                <circle cx="11" cy="11" r="7" />
+                <path d="m20 20-3.5-3.5" />
+              </svg>
+              <input id="catQuery" type="search" placeholder="搜索作品 / 作者" aria-label="搜索作品">
+            </label>
+            <div class="filter-meta" id="catMeta"></div>
+          </div>
+        </div>
+        <div class="f-rows" id="catFilters"></div>
+      </section>
+
+      <!-- 结果区：每页 36 部，底部翻页 -->
+      <section class="cat-main">
+        <div class="cat-count">
+          <span id="catCount"></span>
+          <span id="catNote"></span>
+        </div>
+        <div class="cat-grid" id="catGrid"></div>
+        <div id="catEmpty" style="display:none"></div>
+        <nav class="pager" id="catPager" aria-label="分页导航"></nav>
+      </section>
+    </div>
+  </main>
+
+  <footer id="app-footer"></footer>
+
+  <script src="js/data.js"></script>
+  <script src="js/core.js"></script>
+  <script src="js/ui/nav.js"></script>
+  <script src="js/ui/footer.js"></script>
+  <script src="js/ui/card.js"></script>
+  <script src="js/ui/mascot.js"></script>
+  <script src="js/pages/category.js"></script>
+  <script src="js/app.js"></script>
+</body>
+
+</html>

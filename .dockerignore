@@ -1,0 +1,17 @@
+# 构建镜像时不需要的文件：不进上下文，构建更快也更安全
+node_modules
+npm-debug.log*
+backup
+logs
+.tmp
+.shots
+data
+tools
+deploy
+.env
+.env.*
+sql.env
+*.md
+.git
+.gitignore
+comics_raw.json

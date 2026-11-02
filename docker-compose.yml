@@ -1,0 +1,65 @@
+# 余音的小破站 · 一键部署（应用 + MySQL）
+# ---------------------------------------------------------------
+# 用法：
+#   cp .env.example .env      # 改 JWT_SECRET / DB_PASSWORD
+#   docker compose up -d --build
+#   docker compose logs -f app
+#
+# 说明：compose 会自动读取同目录的 .env，用于变量替换和 app 的环境变量。
+services:
+  app:
+    build: .
+    image: yuyin-comic:latest
+    container_name: comic-app
+    restart: unless-stopped
+    env_file:
+      - .env
+    environment:
+      # 容器内访问数据库走服务名；.env 里的 DB_HOST 是给裸机部署用的
+      DB_HOST: db
+      DB_PORT: "3306"
+      PORT: "3000"
+      TZ: Asia/Shanghai
+    ports:
+      # 前面挂 Caddy/Nginx 时建议改成 "127.0.0.1:3000:3000"，只在回环地址监听
+      - "3000:3000"
+    depends_on:
+      db:
+        condition: service_healthy
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+  db:
+    image: mysql:8.0
+    container_name: comic-db
+    restart: unless-stopped
+    command:
+      - --character-set-server=utf8mb4
+      - --collation-server=utf8mb4_general_ci
+    environment:
+      MYSQL_ROOT_PASSWORD: ${DB_ROOT_PASSWORD:-changeme-root}
+      MYSQL_DATABASE: ${DB_NAME:-yuyin_comic}
+      MYSQL_USER: ${DB_USER:-comic}
+      MYSQL_PASSWORD: ${DB_PASSWORD:-changeme}
+      TZ: Asia/Shanghai
+    volumes:
+      - db-data:/var/lib/mysql
+      # 首次启动（数据卷为空）时自动建表；已有数据时不会重复执行
+      - ./deploy/users.sql:/docker-entrypoint-initdb.d/01-users.sql:ro
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "127.0.0.1", "-uroot", "-p$$MYSQL_ROOT_PASSWORD"]
+      interval: 10s
+      timeout: 5s
+      retries: 12
+      start_period: 30s
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+volumes:
+  db-data:

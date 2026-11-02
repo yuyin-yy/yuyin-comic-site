@@ -1,0 +1,23 @@
+# 依赖
+node_modules/
+
+# 环境变量（含数据库口令，切勿提交）
+.env
+.env.*
+!/.env.example
+sql.env
+
+# 运行日志
+logs/
+
+# 旧版备份与本地产物
+backup/
+.tmp/
+.shots/
+*.log
+*.bak
+*.tmp
+
+# 系统文件
+.DS_Store
+Thumbs.db

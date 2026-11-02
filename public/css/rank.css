@@ -1,0 +1,521 @@
+/* ==========================================================================
+   rank.css · 排行榜
+   --------------------------------------------------------------------------
+   三栏结构：左侧冠军海报（封面 + 名次 + 简介）｜中间榜单表格｜右侧热门题材与说明。
+   顶部深色条切换「榜单类型」与「时间范围」，与正文白卡形成对比。
+   ========================================================================== */
+
+.rank-head { padding: 26px 0 0; }
+
+/* ---------- 顶部榜单切换条 ---------- */
+.rank-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  padding: 10px 14px;
+  border-radius: 14px;
+  background: #14161c;
+  color: #fff;
+  box-shadow: 0 16px 36px rgba(16, 18, 24, 0.18);
+}
+
+.rank-bar .rank-tabs,
+.rank-bar .rank-ranges {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.rank-bar .rank-tabs a {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 15px;
+  border-radius: 8px;
+  font-size: 14px;
+  color: rgba(255, 255, 255, 0.62);
+  transition: all 0.18s var(--ease);
+}
+
+.rank-bar .rank-tabs a svg { width: 14px; height: 14px; opacity: 0.8; }
+.rank-bar .rank-tabs a:hover { color: #fff; }
+.rank-bar .rank-tabs a[aria-current="page"] { background: var(--accent); color: #fff; font-weight: 600; }
+
+.rank-bar .rank-ranges a {
+  padding: 6px 13px;
+  border-radius: 7px;
+  font-size: 13px;
+  color: rgba(255, 255, 255, 0.55);
+  transition: all 0.18s var(--ease);
+}
+
+.rank-bar .rank-ranges a:hover { color: #fff; }
+.rank-bar .rank-ranges a[aria-current="page"] { background: rgba(255, 255, 255, 0.13); color: #fff; }
+
+/* ---------- 三栏布局 ---------- */
+.rank-wrap {
+  display: grid;
+  grid-template-columns: 296px minmax(0, 1fr) 288px;
+  gap: 18px;
+  align-items: start;
+  padding: 18px 0 10px;
+}
+
+/* ---------- 左：冠军海报 ---------- */
+.rank-hero-card {
+  position: relative;
+  overflow: hidden;
+  border-radius: 16px;
+  background: #101218;
+  color: #fff;
+  box-shadow: var(--shadow-md);
+}
+
+.rank-hero-art {
+  position: relative;
+  aspect-ratio: 3 / 3.9;
+  background-size: cover;
+  background-position: center top;
+}
+
+.rank-hero-art::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(180deg, rgba(10, 12, 17, 0.05) 0%, rgba(10, 12, 17, 0.35) 46%, #101218 100%);
+}
+
+/* 冠军序号：左上角金色方块 */
+.rank-crown {
+  position: absolute;
+  top: 12px;
+  left: 12px;
+  z-index: 2;
+  display: grid;
+  place-items: center;
+  width: 40px;
+  height: 40px;
+  border-radius: 8px;
+  background: linear-gradient(160deg, #ffd76a, #f0a92b);
+  color: #26200c;
+  font-size: 21px;
+  font-weight: 800;
+  font-style: italic;
+  box-shadow: 0 8px 20px rgba(240, 169, 43, 0.34);
+}
+
+.rank-hero-body {
+  position: relative;
+  z-index: 2;
+  margin-top: -54px;
+  padding: 0 18px 20px;
+}
+
+.rank-hero-body h2 {
+  font-size: 20px;
+  font-weight: 800;
+  line-height: 1.35;
+  letter-spacing: -0.02em;
+}
+
+.rank-hero-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin: 10px 0 12px;
+}
+
+.rank-hero-tags span,
+.rank-hero-tags a {
+  padding: 3px 9px;
+  border-radius: 4px;
+  background: rgba(255, 255, 255, 0.14);
+  font-size: 11.5px;
+  color: rgba(255, 255, 255, 0.9);
+}
+
+.rank-hero-tags a:hover { background: var(--accent); color: #fff; }
+
+.rank-hero-desc {
+  display: -webkit-box;
+  -webkit-line-clamp: 4;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  font-size: 12.5px;
+  line-height: 1.75;
+  color: rgba(255, 255, 255, 0.62);
+}
+
+.rank-hero-latest {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  /* 窄屏放不下时让按钮换行，避免压住章节文字 */
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-top: 16px;
+  padding-top: 14px;
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+  font-size: 12.5px;
+  color: rgba(255, 255, 255, 0.5);
+}
+
+.rank-hero-latest div { min-width: 0; }
+
+.rank-hero-latest b {
+  display: block;
+  max-width: 100%;
+  color: var(--accent);
+  font-size: 13.5px;
+  font-weight: 700;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.rank-hero-latest .go {
+  display: inline-flex;
+  flex: none;
+  margin-left: auto;
+  align-items: center;
+  gap: 4px;
+  padding: 6px 12px;
+  border-radius: 7px;
+  background: #fff;
+  color: var(--ink);
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.rank-hero-latest .go:hover { background: var(--accent); color: #fff; }
+
+/* ---------- 中：榜单表格 ---------- */
+.rank-table {
+  border-radius: 16px;
+  border: 1px solid var(--line);
+  background: #fff;
+  overflow: hidden;
+}
+
+.rank-table-head,
+.rank-row {
+  display: grid;
+  grid-template-columns: 52px minmax(0, 1fr) 132px 92px;
+  gap: 12px;
+  align-items: center;
+  padding: 11px 18px;
+}
+
+.rank-table-head {
+  font-size: 12.5px;
+  color: #9298a2;
+  background: #faf9f7;
+  border-bottom: 1px solid #f1efeb;
+}
+
+.rank-table-head span:last-child { text-align: right; }
+
+.rank-row {
+  border-bottom: 1px dashed #f2f0ec;
+  transition: background 0.16s var(--ease);
+}
+
+.rank-row:last-child { border-bottom: 0; }
+.rank-row:hover { background: #fbfaf8; }
+
+/* 名次徽标：前三名用红底，其余灰底 */
+.rk {
+  display: grid;
+  place-items: center;
+  width: 24px;
+  height: 24px;
+  border-radius: 5px;
+  background: #f1f1f3;
+  color: #8b919b;
+  font-size: 12.5px;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+
+.rk.top1 { background: #f03a4a; color: #fff; }
+.rk.top2 { background: #f5776f; color: #fff; }
+.rk.top3 { background: #f7a1a4; color: #fff; }
+
+.rank-book {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-width: 0;
+}
+
+.rank-book img {
+  width: 44px;
+  height: 59px;
+  border-radius: 6px;
+  object-fit: cover;
+  background: var(--paper);
+  flex: 0 0 auto;
+}
+
+.rank-book .rb-text { min-width: 0; }
+
+.rank-book b {
+  display: block;
+  font-size: 14px;
+  font-weight: 650;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.rank-book small {
+  display: block;
+  margin-top: 3px;
+  font-size: 12px;
+  color: #8b919b;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.rank-book:hover b { color: var(--accent); }
+
+.rk-tag {
+  font-size: 12.5px;
+  color: #6f7681;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.rk-heat {
+  text-align: right;
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--accent);
+  font-variant-numeric: tabular-nums;
+}
+
+/* ---------- 右：题材与说明 ---------- */
+.rank-side { display: grid; gap: 16px; }
+
+.side-card {
+  padding: 16px;
+  border-radius: 16px;
+  border: 1px solid var(--line);
+  background: #fff;
+}
+
+.side-card h3 {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  margin-bottom: 12px;
+  font-size: 15px;
+  font-weight: 700;
+}
+
+.side-card h3 i {
+  width: 3px;
+  height: 14px;
+  border-radius: 2px;
+  background: var(--accent);
+}
+
+.tag-tiles {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+}
+
+.tag-tiles a {
+  padding: 9px 6px;
+  border-radius: 6px;
+  background: #20232b;
+  color: #fff;
+  font-size: 13px;
+  text-align: center;
+  transition: background 0.18s var(--ease);
+}
+
+.tag-tiles a:hover { background: var(--accent); }
+
+.side-note {
+  font-size: 12.5px;
+  line-height: 1.8;
+  color: var(--muted);
+}
+
+.side-note b { color: var(--ink-soft); }
+
+.side-list { display: grid; gap: 10px; }
+
+.side-list a {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 13px;
+}
+
+.side-list em {
+  display: grid;
+  place-items: center;
+  width: 18px;
+  height: 18px;
+  border-radius: 4px;
+  background: var(--paper);
+  font-style: normal;
+  font-size: 11.5px;
+  font-weight: 700;
+  color: var(--muted);
+}
+
+.side-list span {
+  flex: 1;
+  min-width: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.side-list a:hover span { color: var(--accent); }
+
+/* ---------- 响应式 ---------- */
+@media (max-width: 1180px) {
+  .rank-wrap { grid-template-columns: 260px minmax(0, 1fr); }
+  .rank-side { grid-column: 1 / -1; grid-template-columns: 1fr 1fr; }
+}
+
+@media (max-width: 900px) {
+  .rank-bar { flex-direction: column; align-items: stretch; gap: 8px; }
+  /* 窄屏时标签横向滚动，隐藏滚动条 */
+  .rank-bar .rank-tabs {
+    overflow-x: auto;
+    padding-bottom: 2px;
+    scrollbar-width: none;
+  }
+  .rank-bar .rank-tabs::-webkit-scrollbar { display: none; }
+  .rank-bar .rank-tabs a { white-space: nowrap; padding: 8px 12px; font-size: 13px; }
+  .rank-wrap { grid-template-columns: 1fr; }
+  .rank-hero-card { display: grid; grid-template-columns: 132px minmax(0, 1fr); }
+  .rank-hero-art { aspect-ratio: 3 / 4; }
+  .rank-hero-art::after { background: linear-gradient(90deg, rgba(10, 12, 17, 0.1), #101218 96%); }
+  .rank-hero-body { margin-top: 0; padding: 18px 16px; }
+  .rank-hero-body h2 { font-size: 18px; }
+  .rank-hero-desc { -webkit-line-clamp: 3; }
+  .rank-side { grid-template-columns: 1fr; }
+}
+
+@media (max-width: 720px) {
+  .rank-table-head { display: none; }
+  .rank-row {
+    grid-template-columns: 34px minmax(0, 1fr) 76px;
+    gap: 8px;
+    padding: 10px 12px;
+  }
+  .rank-row .rk-tag { display: none; }
+  .rank-book img { width: 38px; height: 51px; }
+  .rank-book b { font-size: 13.5px; }
+  .rk-heat { font-size: 13px; }
+}
+
+/* ---------- 更多排行（第 9 名往后） ---------- */
+.rank-more { padding: 24px 0 60px; }
+
+.rank-more-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 16px;
+}
+
+.rank-more-head h2 {
+  font-size: 19px;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+}
+
+/* 一行五列：与分类页卡片同比例，带名次角标 */
+.rank-grid {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 24px 16px;
+}
+
+.rc { display: block; min-width: 0; }
+
+.rc-cover {
+  position: relative;
+  display: block;
+  border-radius: 12px;
+  overflow: hidden;
+  aspect-ratio: 3 / 4;
+  background: var(--paper);
+}
+
+.rc-cover img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform 0.35s var(--ease);
+}
+
+.rc:hover .rc-cover img { transform: scale(1.05); }
+
+/* 名次角标：半透明黑底压在封面左上角 */
+.rc-no {
+  position: absolute;
+  top: 8px;
+  left: 8px;
+  display: grid;
+  place-items: center;
+  min-width: 24px;
+  height: 24px;
+  padding: 0 6px;
+  border-radius: 6px;
+  background: rgba(16, 18, 24, 0.72);
+  color: #fff;
+  font-size: 12px;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  backdrop-filter: blur(6px);
+}
+
+.rc b {
+  display: block;
+  margin-top: 10px;
+  font-size: 14px;
+  font-weight: 650;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.rc:hover b { color: var(--accent); }
+
+.rc-meta {
+  display: block;
+  margin-top: 3px;
+  font-size: 12px;
+  color: var(--muted);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.rc-meta em { font-style: normal; color: var(--accent); font-weight: 700; }
+
+@media (max-width: 1080px) {
+  .rank-grid { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+}
+
+@media (max-width: 900px) {
+  .rank-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+}
+
+@media (max-width: 460px) {
+  .rank-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 18px 12px; }
+  .rc b { font-size: 13px; }
+}

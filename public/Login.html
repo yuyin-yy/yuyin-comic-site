@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>登录 · 余音的小破站</title>
+  <meta name="description" content="登录或注册余音的小破站账号，同步你的追漫清单。">
+  <meta name="theme-color" content="#0b0d13">
+  <!-- 样式按层拆分：基础 → 骨架 → 组件 → 页面 → 响应式 -->
+  <link rel="stylesheet" href="css/base.css">
+  <link rel="stylesheet" href="css/layout.css">
+  <link rel="stylesheet" href="css/components.css">
+  <link rel="stylesheet" href="css/pages.css">
+  <link rel="stylesheet" href="css/responsive.css">
+  <link rel="icon" href="imgs/offen/webtitle.png" sizes="any">
+</head>
+
+<!-- 登录页：左侧旋转唱片 + 右侧表单，交互见 js/pages/auth.js -->
+<body class="auth-page" data-page="auth">
+  <a class="auth-home" href="index.html">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+      <path d="M19 12H6M11 6l-6 6 6 6" />
+    </svg>
+    返回首页
+  </a>
+
+  <main class="auth-shell">
+    <!-- 左：旋转唱片 + 文案 -->
+    <section class="auth-stage" aria-label="站点介绍">
+      <div>
+        <div class="disc-wrap">
+          <span class="disc-glow" aria-hidden="true"></span>
+          <span class="disc-ring r1" aria-hidden="true"></span>
+          <span class="disc-ring r2" aria-hidden="true"></span>
+          <div class="disc" id="disc" role="button" tabindex="0" aria-label="点击暂停或继续旋转">
+            <img src="imgs/offen/罪恶王冠.png" alt="站娘插画">
+            <span class="disc-sheen" aria-hidden="true"></span>
+          </div>
+        </div>
+        <p class="disc-hint">CLICK TO PAUSE</p>
+      </div>
+
+      <div class="stage-copy">
+        <span class="eyebrow">余音的小破站</span>
+        <h2>把喜欢的故事<br>留在手边</h2>
+        <p>登录之后，追漫清单会跟着账号走。换台设备，也能接着上次的那一话往下翻。</p>
+      </div>
+    </section>
+
+    <!-- 右：表单 -->
+    <section class="auth-card" aria-label="账号表单">
+      <div class="auth-brand">
+        <img class="brand-mark" src="imgs/offen/miku.jpg" alt="" width="36" height="36">
+        <span>余音的小破站</span>
+      </div>
+
+      <h1 id="authTitle">欢迎回来</h1>
+      <p class="sub" id="authSub">登录后可同步你的追漫清单</p>
+
+      <div class="tabs" id="authTabs" role="tablist" aria-label="登录或注册">
+        <button type="button" data-tab="login" role="tab" aria-selected="true">登录</button>
+        <button type="button" data-tab="reg" role="tab" aria-selected="false">注册</button>
+      </div>
+
+      <form id="loginForm" data-pane="login" novalidate>
+        <div class="form-field">
+          <label for="loginUsername">用户名</label>
+          <div class="input-wrap">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" aria-hidden="true">
+              <circle cx="12" cy="8" r="3.6" />
+              <path d="M4.5 20a7.5 7.5 0 0 1 15 0" />
+            </svg>
+            <input id="loginUsername" type="text" placeholder="请输入用户名" autocomplete="username" required>
+          </div>
+          <div class="form-error"></div>
+        </div>
+
+        <div class="form-field">
+          <label for="loginPassword">密码</label>
+          <div class="input-wrap">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" aria-hidden="true">
+              <rect x="4.5" y="10" width="15" height="10.5" rx="3" />
+              <path d="M8 10V7.5a4 4 0 0 1 8 0V10" />
+            </svg>
+            <input id="loginPassword" type="password" placeholder="请输入密码" autocomplete="current-password" required>
+            <button class="pw-toggle" type="button" aria-label="显示密码">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" aria-hidden="true">
+                <path d="M2.5 12S6 5.8 12 5.8 21.5 12 21.5 12 18 18.2 12 18.2 2.5 12 2.5 12z" />
+                <circle cx="12" cy="12" r="3" />
+              </svg>
+            </button>
+          </div>
+          <div class="form-error"></div>
+        </div>
+
+        <div class="form-foot">
+          <label class="check"><input type="checkbox" checked> 记住登录状态</label>
+          <a href="#" onclick="event.preventDefault();YY.toast('请联系站长重置密码：QQ 3078480339')">忘记密码？</a>
+        </div>
+
+        <button class="btn btn-primary btn-block" id="loginSubmit" type="submit" style="height:46px">登录</button>
+      </form>
+
+      <form id="regForm" data-pane="reg" novalidate hidden>
+        <div class="form-field">
+          <label for="regUsername">用户名</label>
+          <div class="input-wrap">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" aria-hidden="true">
+              <circle cx="12" cy="8" r="3.6" />
+              <path d="M4.5 20a7.5 7.5 0 0 1 15 0" />
+            </svg>
+            <input id="regUsername" type="text" placeholder="3-20 位中文 / 字母 / 数字" autocomplete="username" required>
+          </div>
+          <div class="form-error"></div>
+        </div>
+
+        <div class="form-field">
+          <label for="regPassword">密码</label>
+          <div class="input-wrap">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" aria-hidden="true">
+              <rect x="4.5" y="10" width="15" height="10.5" rx="3" />
+              <path d="M8 10V7.5a4 4 0 0 1 8 0V10" />
+            </svg>
+            <input id="regPassword" type="password" placeholder="至少 6 位字符" autocomplete="new-password" required>
+            <button class="pw-toggle" type="button" aria-label="显示密码">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" aria-hidden="true">
+                <path d="M2.5 12S6 5.8 12 5.8 21.5 12 21.5 12 18 18.2 12 18.2 2.5 12 2.5 12z" />
+                <circle cx="12" cy="12" r="3" />
+              </svg>
+            </button>
+          </div>
+          <div class="form-error"></div>
+        </div>
+
+        <div class="form-field">
+          <label for="regPassword2">确认密码</label>
+          <div class="input-wrap">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" aria-hidden="true">
+              <rect x="4.5" y="10" width="15" height="10.5" rx="3" />
+              <path d="M8 10V7.5a4 4 0 0 1 8 0V10" />
+            </svg>
+            <input id="regPassword2" type="password" placeholder="再次输入密码" autocomplete="new-password" required>
+          </div>
+          <div class="form-error"></div>
+        </div>
+
+        <button class="btn btn-primary btn-block" id="regSubmit" type="submit" style="height:46px;margin-top:4px">注册</button>
+      </form>
+
+      <div class="auth-note" id="authNote">
+        账号由本站自建后端（Express + MySQL）提供，密码经 bcrypt 加密存储。
+        若接口未启动，页面会提示连接失败，前端仍可正常浏览。
+      </div>
+    </section>
+  </main>
+
+  <script src="js/data.js"></script>
+  <script src="js/core.js"></script>
+  <script src="js/ui/nav.js"></script>
+  <script src="js/ui/footer.js"></script>
+  <script src="js/ui/card.js"></script>
+  <script src="js/ui/mascot.js"></script>
+  <script src="js/pages/auth.js"></script>
+  <script src="js/app.js"></script>
+</body>
+
+</html>

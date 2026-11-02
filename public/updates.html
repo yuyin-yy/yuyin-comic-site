@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>最近更新 · 余音的小破站</title>
+  <meta name="description" content="按更新时间排列的漫画更新流，顶部自动轮播主推作品，每行可直接跳到最新一话。">
+  <meta name="theme-color" content="#f5f3ef">
+  <link rel="stylesheet" href="css/base.css">
+  <link rel="stylesheet" href="css/layout.css">
+  <link rel="stylesheet" href="css/components.css">
+  <link rel="stylesheet" href="css/pages.css">
+  <link rel="stylesheet" href="css/updates.css">
+  <link rel="stylesheet" href="css/responsive.css">
+  <link rel="icon" href="imgs/offen/webtitle.png" sizes="any">
+</head>
+
+<!-- 最近更新：顶部自动轮播 + 按日期分组的更新流（见 js/pages/updates.js） -->
+<body data-page="updates">
+  <header id="app-nav"></header>
+
+  <main>
+    <div class="container upd-top">
+      <!-- 轮播：脚本注入 5 张主推，3 秒自动切换，悬停暂停，底部进度条同步计时 -->
+      <section class="carousel" id="carousel" aria-label="主推作品轮播" aria-roledescription="carousel">
+        <div id="carSlides"></div>
+        <button class="car-arrow prev" type="button" id="carPrev" aria-label="上一张">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path d="M15 5l-7 7 7 7" />
+          </svg>
+        </button>
+        <button class="car-arrow next" type="button" id="carNext" aria-label="下一张">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path d="M9 5l7 7-7 7" />
+          </svg>
+        </button>
+        <div class="car-dots" id="carDots" role="tablist" aria-label="轮播导航"></div>
+        <!-- 与自动播放同步的进度条 -->
+        <div class="car-prog-rail"><i class="car-prog" id="carProg"></i></div>
+      </section>
+
+      <!-- 右侧：本周热门前三 -->
+      <aside class="week-card" aria-label="本周热门">
+        <h3>本周热门</h3>
+        <div class="week-list" id="weekList"></div>
+        <a class="week-more" href="rank.html">查看完整榜单</a>
+      </aside>
+    </div>
+
+    <div class="container">
+      <!-- 更新流：近三个月按日期分组列成列表，更早的作品改为一行五列的卡片墙 -->
+      <section class="upd-feed" aria-label="最近更新列表">
+        <div class="upd-feed-head">
+          <h2><i></i>最近更新</h2>
+          <span id="updCount"></span>
+        </div>
+        <div id="updBody"></div>
+        <div class="upd-more" id="updMore" aria-label="加载更早的作品">
+          <button class="btn btn-ghost" type="button">加载更多</button>
+        </div>
+      </section>
+    </div>
+  </main>
+
+  <footer id="app-footer"></footer>
+
+  <script src="js/data.js"></script>
+  <script src="js/core.js"></script>
+  <script src="js/ui/nav.js"></script>
+  <script src="js/ui/footer.js"></script>
+  <script src="js/ui/card.js"></script>
+  <script src="js/ui/mascot.js"></script>
+  <script src="js/pages/updates.js"></script>
+  <script src="js/app.js"></script>
+</body>
+
+</html>

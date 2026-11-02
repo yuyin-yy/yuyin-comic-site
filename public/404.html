@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>页面走丢了 · 余音的小破站</title>
+  <meta name="robots" content="noindex">
+  <link rel="stylesheet" href="css/base.css">
+  <link rel="stylesheet" href="css/layout.css">
+  <link rel="stylesheet" href="css/components.css">
+  <link rel="stylesheet" href="css/pages.css">
+  <link rel="icon" href="imgs/offen/webtitle.png" sizes="any">
+  <style>
+    /* 这一页只有一段内容，样式就地写，避免为它多引一个 css 文件 */
+    .nf {
+      min-height: 100vh;
+      display: grid;
+      place-items: center;
+      padding: 80px 20px;
+      text-align: center;
+    }
+
+    .nf-code {
+      font-size: 96px;
+      font-weight: 800;
+      line-height: 1;
+      letter-spacing: -0.05em;
+      color: var(--ink);
+    }
+
+    /* 内容未收录时展示中文占位，字号要收一档 */
+    .nf-code.text {
+      font-size: 64px;
+      letter-spacing: 0.02em;
+    }
+
+    .nf h1 { margin-top: 14px; font-size: 22px; font-weight: 700; }
+
+    .nf p {
+      margin-top: 10px;
+      font-size: 14px;
+      color: var(--muted);
+      line-height: 1.9;
+    }
+
+    .nf-actions {
+      display: flex;
+      justify-content: center;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-top: 26px;
+    }
+
+    .nf-tip {
+      margin-top: 22px;
+      font-size: 12px;
+      color: var(--muted);
+      opacity: .75;
+    }
+  </style>
+</head>
+
+<body>
+  <div class="nf">
+    <div>
+      <div class="nf-code" id="nfCode">404</div>
+      <h1 id="nfTitle">这一页不在了</h1>
+      <p id="nfDesc">
+        地址可能过期，也可能是我改版时删掉了某个页面。<br>
+        从下面任意一个入口继续逛吧。
+      </p>
+      <div class="nf-actions" id="nfActions">
+        <a class="btn btn-dark" href="index.html">回首页</a>
+        <a class="btn btn-ghost" href="category.html">漫画分类</a>
+        <a class="btn btn-ghost" href="rank.html">排行榜</a>
+        <a class="btn btn-ghost" href="updates.html">最近更新</a>
+      </div>
+      <p class="nf-tip" id="nfTip" hidden></p>
+    </div>
+  </div>
+
+  <script>
+    /* 站内跳 404 的两种来源：
+       ?from=pending&id=<作品 id>&t=<标题>
+         章节还没抓到的作品，阅读入口落到这里 —— 说明原因并给回作品页的出口。
+       其余情况按普通 404 处理。 */
+    (function () {
+      var q = new URLSearchParams(location.search);
+      if (q.get('from') !== 'pending') return;
+
+      var id = q.get('id');
+      var title = q.get('t') || '这部作品';
+
+      document.title = '内容待补全 · 余音的小破站';
+      document.getElementById('nfCode').textContent = '待补全';
+      document.getElementById('nfCode').classList.add('text');
+      document.getElementById('nfTitle').textContent = '《' + title + '》的内容还没抓到';
+      document.getElementById('nfDesc').innerHTML =
+        '这本书的章节目录仍在补抓队列里 —— 源站对详情页做了访问频率限制，' +
+        '本站只能分批、低速地补，抓完会自动上线。<br>' +
+        '作品信息（封面 / 作者 / 题材 / 简介）已经收录，可以先去作品页看看。';
+
+      var acts = document.getElementById('nfActions');
+      var back = document.createElement('a');
+      back.className = 'btn btn-dark';
+      back.href = 'index02.html?id=' + encodeURIComponent(id || '');
+      back.textContent = '回作品页';
+      acts.insertBefore(back, acts.firstChild);
+
+      var tip = document.getElementById('nfTip');
+      tip.hidden = false;
+      tip.textContent = '或者到「漫画分类」里先看已收录章节的其他作品。';
+    })();
+  </script>
+</body>
+
+</html>

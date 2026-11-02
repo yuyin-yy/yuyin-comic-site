@@ -1,0 +1,16 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 300 400" width="300" height="400">
+  <defs>
+    <linearGradient id="g" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#eae7e1"/>
+      <stop offset="1" stop-color="#d9d5cd"/>
+    </linearGradient>
+  </defs>
+  <rect width="300" height="400" fill="url(#g)"/>
+  <g fill="none" stroke="#fff" stroke-width="1.2" opacity="0.75">
+    <rect x="24" y="24" width="252" height="352" rx="14"/>
+    <path d="M24 300 L124 200 L200 276 L252 224"/>
+  </g>
+  <circle cx="210" cy="118" r="26" fill="#fff" opacity="0.55"/>
+  <text x="150" y="342" font-family="-apple-system, 'PingFang SC', 'Microsoft YaHei', sans-serif"
+        font-size="15" fill="#8a8f9c" text-anchor="middle" letter-spacing="2">封面加载中</text>
+</svg>

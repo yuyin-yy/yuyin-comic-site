@@ -1,0 +1,295 @@
+/* ==========================================================================
+   filter.css · 分类页（筛选面板 + 分页）
+   --------------------------------------------------------------------------
+   结构：暗色页头 →「筛选卡片」（五行条件：分类/地区/受众/进度/排序）→ 作品网格 → 分页。
+   视觉参考主流的漫画目录站：条件用灰底小方块，选中态换成品牌红；
+   卡片整体上浮压住页头，让首屏有层次而不是一条平线。
+   ========================================================================== */
+
+/* ---------- 页头 ---------- */
+.cat-hero {
+  position: relative;
+  padding: 30px 0 62px;
+  overflow: hidden;
+  color: #fff;
+  background: #101218;
+}
+
+.cat-hero-bg {
+  position: absolute;
+  inset: -8% -4%;
+  background-size: cover;
+  background-position: center 32%;
+  opacity: 0.34;
+  filter: saturate(1.15) blur(1px);
+  transform: scale(1.04);
+}
+
+/* 左侧压暗，保证文字可读；右侧留出画面 */
+.cat-hero::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background:
+    linear-gradient(96deg, #0c0e13 6%, rgba(12, 14, 19, 0.86) 38%, rgba(12, 14, 19, 0.42) 74%, rgba(12, 14, 19, 0.72) 100%),
+    radial-gradient(720px 320px at 82% 20%, rgba(229, 50, 63, 0.22), transparent 70%);
+}
+
+.cat-hero .container { position: relative; z-index: 2; }
+
+.cat-crumb {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  font-size: 12.5px;
+  color: rgba(255, 255, 255, 0.46);
+}
+
+.cat-crumb a:hover { color: #fff; }
+.cat-crumb span { color: rgba(255, 255, 255, 0.26); }
+
+.cat-hero h1 {
+  margin-top: 14px;
+  font-size: 36px;
+  font-weight: 800;
+  letter-spacing: -0.03em;
+  line-height: 1.2;
+}
+
+.cat-hero p {
+  margin-top: 9px;
+  max-width: 620px;
+  font-size: 14px;
+  line-height: 1.8;
+  color: rgba(255, 255, 255, 0.6);
+}
+
+/* ---------- 筛选卡片 ---------- */
+.filter-card {
+  position: relative;
+  z-index: 3;
+  margin-top: -40px;
+  padding: 20px 26px 16px;
+  border-radius: 16px;
+  background: #fff;
+  border: 1px solid var(--line);
+  box-shadow: 0 20px 50px rgba(16, 18, 24, 0.12);
+}
+
+.filter-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 18px;
+  padding-bottom: 16px;
+  border-bottom: 1px solid #f1efeb;
+}
+
+.filter-bar h2 {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  font-size: 20px;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+}
+
+/* 标题前的红色符号 */
+.filter-bar h2 i {
+  display: grid;
+  place-items: center;
+  width: 22px;
+  height: 22px;
+  font-style: normal;
+  font-size: 15px;
+  font-weight: 700;
+  line-height: 1;
+  color: var(--accent);
+}
+
+.filter-meta {
+  font-size: 12.5px;
+  color: #8b919b;
+  white-space: nowrap;
+}
+
+/* 右侧工具区：搜索 + 页码统计 */
+.filter-tools {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+}
+
+.filter-meta b { color: var(--accent); font-weight: 700; }
+
+/* 筛选卡片内的搜索框 */
+.filter-search {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  height: 36px;
+  padding: 0 12px;
+  border: 1px solid var(--line);
+  border-radius: 9px;
+  background: #fbfaf8;
+  transition: border-color 0.2s var(--ease);
+}
+
+.filter-search:focus-within { border-color: var(--ink); background: #fff; }
+
+.filter-search svg { width: 15px; height: 15px; color: var(--muted-2); flex: 0 0 auto; }
+
+.filter-search input {
+  width: 168px;
+  border: 0;
+  background: none;
+  outline: none;
+  font-size: 13.5px;
+  font-family: inherit;
+  color: var(--ink);
+}
+
+/* ---------- 条件行 ---------- */
+.f-rows { padding: 8px 0 6px; }
+
+.f-row {
+  display: grid;
+  grid-template-columns: 52px minmax(0, 1fr);
+  gap: 12px;
+  padding: 7px 0;
+  border-bottom: 1px dashed #f4f2ee;
+}
+
+.f-row:last-child { border-bottom: 0; }
+
+.f-row > span {
+  font-size: 13.5px;
+  color: #9298a2;
+  line-height: 32px;
+}
+
+.f-opts { display: flex; flex-wrap: wrap; gap: 8px; }
+
+/* 长圆形按钮：未选中白底细边，选中墨黑实心（不用红色，和整站按钮语言统一） */
+.f-opt {
+  height: 32px;
+  padding: 0 18px;
+  border-radius: 999px;
+  border: 1px solid transparent;
+  background: #f5f4f1;
+  font-size: 13px;
+  font-family: inherit;
+  color: #5a606b;
+  cursor: pointer;
+  transition: background 0.18s var(--ease), color 0.18s var(--ease),
+    border-color 0.18s var(--ease), transform 0.18s var(--ease);
+}
+
+.f-opt:hover {
+  background: #fff;
+  border-color: var(--ink);
+  color: var(--ink);
+  transform: translateY(-1px);
+}
+
+.f-opt[aria-pressed="true"] {
+  background: var(--ink);
+  border-color: var(--ink);
+  color: #fff;
+  font-weight: 600;
+}
+
+/* ---------- 网格与分页 ---------- */
+.cat-main { padding: 24px 0 0; }
+
+.cat-grid {
+  display: grid;
+  grid-template-columns: repeat(6, minmax(0, 1fr));
+  gap: 24px 16px;
+}
+
+.cat-count {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 4px 2px 16px;
+  font-size: 13px;
+  color: var(--muted);
+}
+
+.cat-count b { color: var(--ink); font-weight: 700; }
+
+.pager {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 34px 0 64px;
+}
+
+.pager button {
+  min-width: 36px;
+  height: 36px;
+  padding: 0 10px;
+  border-radius: 8px;
+  border: 1px solid var(--line);
+  background: #fff;
+  font-size: 13.5px;
+  font-family: inherit;
+  color: #5a606b;
+  cursor: pointer;
+  transition: all 0.18s var(--ease);
+}
+
+.pager button:hover:not([disabled]) { border-color: var(--ink); color: var(--ink); }
+
+.pager button[aria-current="page"] {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: #fff;
+  font-weight: 600;
+}
+
+.pager button[disabled] { opacity: 0.4; cursor: default; }
+
+.pager .gap { color: var(--muted-2); font-size: 13px; padding: 0 2px; }
+
+/* ---------- 响应式 ---------- */
+@media (max-width: 1180px) {
+  .cat-grid { grid-template-columns: repeat(5, minmax(0, 1fr)); }
+}
+
+@media (max-width: 1080px) {
+  .cat-grid { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+  .filter-card { padding: 18px 20px 10px; }
+}
+
+@media (max-width: 900px) {
+  .cat-hero { padding: 24px 0 54px; }
+  .cat-hero h1 { font-size: 28px; }
+  .filter-bar { flex-wrap: wrap; align-items: flex-start; gap: 12px; }
+  .filter-search input { width: 120px; }
+  .cat-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+}
+
+@media (max-width: 720px) {
+  .cat-hero { padding: 18px 0 46px; }
+  .cat-hero h1 { font-size: 24px; }
+  .cat-hero p { font-size: 13px; }
+  .filter-card { margin-top: -32px; border-radius: 14px; padding: 16px 14px 8px; }
+  .filter-bar h2 { font-size: 17px; }
+  .filter-bar .filter-search { order: 3; width: 100%; }
+  .filter-search input { width: 100%; }
+  .f-row { grid-template-columns: 1fr; gap: 6px; }
+  .f-row > span { line-height: 1.4; font-size: 12.5px; }
+  .cat-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 18px 12px; }
+  .pager { padding: 26px 0 46px; }
+}
+
+@media (max-width: 460px) {
+  .cat-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .filter-meta { font-size: 12px; }
+}

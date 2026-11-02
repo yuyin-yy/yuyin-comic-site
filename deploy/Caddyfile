@@ -1,0 +1,35 @@
+# Caddy 反向代理配置（推荐用 Caddy：自动 HTTPS，两行搞定）
+# ---------------------------------------------------------------
+# 1. 安装：https://caddyserver.com/docs/install  （Ubuntu: apt install caddy）
+# 2. 把本文件放到 /etc/caddy/Caddyfile，改掉下面的域名
+# 3. systemctl reload caddy
+#
+# 域名解析到本机 IP 且 80/443 可访问时，Caddy 会自动申请并续期证书。
+
+comic.example.com {
+	# 压缩：JSON/JS/CSS/HTML 都能省一半以上流量
+	encode zstd gzip
+
+	# 封面图体积大、内容基本不变，单独给 7 天缓存；
+	# js/data.js 会随重建数据变化，保持服务端默认的 1 小时，避免看到旧数据
+	@images path /imgs/*
+	header @images Cache-Control "public, max-age=604800"
+
+	reverse_proxy 127.0.0.1:3000 {
+		header_up X-Real-IP {remote_host}
+		header_up X-Forwarded-Proto {scheme}
+	}
+
+	log {
+		output file /var/log/caddy/comic.access.log {
+			roll_size 10mb
+			roll_keep 5
+		}
+	}
+}
+
+# ---- 还没有域名？把上面整段换成下面这段，用 IP 直接访问（无证书）----
+# :80 {
+# 	encode zstd gzip
+# 	reverse_proxy 127.0.0.1:3000
+# }

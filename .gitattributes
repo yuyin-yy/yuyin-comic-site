@@ -1,0 +1,12 @@
+# 二进制资源：不让 git 做换行转换，也不进文本 diff
+*.webp binary
+*.jpg binary
+*.jpeg binary
+*.png binary
+*.ico binary
+*.gif binary
+*.woff binary
+*.woff2 binary
+
+# 文本文件交给 git 自动识别，不强制换行风格
+* text=auto
