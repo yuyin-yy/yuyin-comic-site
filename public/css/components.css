@@ -46,20 +46,20 @@
 }
 .btn-dark:hover { background: #000; color: #fff; }
 
-/* 黑色玻璃按钮：深色半透明 + 顶部反光 + 柔和高光，放在浅色卡片上不刺眼。
-   用于登录页的「登录 / 注册」提交按钮（替代原来的强调红）。 */
+/* 红色玻璃按钮：强调红的半透明渐变 + 顶部反光 + 内高光，
+   保留「玻璃」的透亮层次，但用品牌红做主色。用于登录页的「登录 / 注册」。 */
 .btn-glass {
   position: relative;
   overflow: hidden;
-  background: linear-gradient(160deg, rgba(41, 44, 53, 0.94), rgba(13, 14, 19, 0.97));
+  background: linear-gradient(160deg, rgba(240, 70, 84, 0.98), rgba(168, 22, 36, 0.98));
   color: #fff;
-  border: 1px solid rgba(255, 255, 255, 0.16);
+  border: 1px solid rgba(255, 255, 255, 0.22);
   box-shadow:
-    0 10px 24px rgba(10, 12, 18, 0.26),
-    inset 0 1px 0 rgba(255, 255, 255, 0.24),
-    inset 0 -10px 20px rgba(0, 0, 0, 0.32);
-  -webkit-backdrop-filter: blur(14px) saturate(140%);
-  backdrop-filter: blur(14px) saturate(140%);
+    0 10px 24px rgba(198, 32, 46, 0.32),
+    inset 0 1px 0 rgba(255, 255, 255, 0.34),
+    inset 0 -10px 20px rgba(116, 8, 18, 0.34);
+  -webkit-backdrop-filter: blur(14px) saturate(150%);
+  backdrop-filter: blur(14px) saturate(150%);
 }
 
 /* 上半部斜切反光，制造玻璃厚度感 */
@@ -69,24 +69,24 @@
   inset: 1px 1px auto;
   height: 46%;
   border-radius: inherit;
-  background: linear-gradient(180deg, rgba(255, 255, 255, 0.16), rgba(255, 255, 255, 0));
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.22), rgba(255, 255, 255, 0));
   pointer-events: none;
 }
 
 .btn-glass:hover {
-  background: linear-gradient(160deg, rgba(56, 60, 71, 0.96), rgba(20, 22, 28, 0.98));
-  border-color: rgba(255, 255, 255, 0.28);
+  background: linear-gradient(160deg, rgba(246, 84, 97, 0.99), rgba(186, 28, 43, 0.99));
+  border-color: rgba(255, 255, 255, 0.32);
   color: #fff;
   box-shadow:
-    0 14px 30px rgba(10, 12, 18, 0.32),
-    inset 0 1px 0 rgba(255, 255, 255, 0.3),
-    inset 0 -10px 20px rgba(0, 0, 0, 0.32);
+    0 14px 30px rgba(198, 32, 46, 0.4),
+    inset 0 1px 0 rgba(255, 255, 255, 0.4),
+    inset 0 -10px 20px rgba(116, 8, 18, 0.34);
 }
 
 .btn-glass:active { transform: scale(0.985); }
 
 .btn-glass:focus-visible {
-  outline: 2px solid rgba(20, 22, 28, 0.5);
+  outline: 2px solid rgba(198, 32, 46, 0.55);
   outline-offset: 3px;
 }
 
