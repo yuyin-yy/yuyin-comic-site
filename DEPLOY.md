@@ -146,3 +146,81 @@ docker stats / pm2 monit / free -h / df -h
 - `.env`、`sql.env` 永远不要提交或打包上传（`.dockerignore`、`.gitignore` 已排除）；
 - 站点性质是「漫画元数据索引 + 外链阅读」，页面底部已声明不存储漫画内容，保留这段声明；
 - 抓取补数据要在**服务器**上跑（独立 IP），仍然要温和：单线程、间隔 3–4 秒、每批 ≤80、遇 403 立即停。
+
+## 9. Git 部署（push 即上线）
+
+仓库已初始化（`main` 分支，904 个文件 / 32MB），`.gitignore` 排除了 `node_modules`、`.tmp`、
+`backup`、`sql.env`、`*.log`；`.gitattributes` 把封面标记为二进制，避免 diff 与换行转换。
+
+### 9.1 首次推到远端
+
+```bash
+# 在 GitHub 建一个空仓库（不要勾选 README / .gitignore，否则要先 pull 合并）
+git remote add origin git@github.com:<你的账号>/yuyin-comic-site.git
+git push -u origin main
+```
+
+用 HTTPS 的话把地址换成 `https://github.com/<你的账号>/yuyin-comic-site.git`，
+首次 push 会弹浏览器授权（Windows 凭据管理器会记住）。
+
+仓库建议保持 **private**：封面与作品元数据来自第三方源站，公开仓库等于公开再分发。
+
+### 9.2 配一次服务器（只需一次）
+
+```bash
+# 服务器上：建目录与部署用户
+adduser --disabled-password --gecos "" deployer
+mkdir -p /var/www/comic && chown -R deployer:deployer /var/www/comic
+
+# 本地：生成专用部署密钥（不要用你自己的个人密钥）
+ssh-keygen -t ed25519 -C "github-actions-deploy" -f ~/.ssh/comic_deploy -N ""
+ssh-copy-id -i ~/.ssh/comic_deploy.pub deployer@你的服务器IP
+
+# 服务器上：先把 .env 与数据库准备好（见第 3 节），否则首启会退化成 503
+```
+
+### 9.3 GitHub Secrets
+
+仓库 → Settings → Secrets and variables → Actions → New repository secret：
+
+| 名称 | 值 | 必填 |
+|---|---|---|
+| `SSH_HOST` | 服务器 IP 或域名 | 是 |
+| `SSH_USER` | `deployer` | 是 |
+| `SSH_KEY` | `~/.ssh/comic_deploy` 的**私钥全文**（含 `-----BEGIN` 与 `-----END`） | 是 |
+| `SSH_PORT` | SSH 端口，默认 22 | 否 |
+| `DEPLOY_PATH` | `/var/www/comic` | 是 |
+
+四个必填项缺任意一个，流水线不会失败，只会在日志里打一条 notice 并跳过部署（`.github/workflows/deploy.yml` 里的 guard 步骤）。
+
+### 9.4 工作流做了什么
+
+`.github/workflows/deploy.yml`：`push` 到 `main` 或手动触发 → rsync 整包同步 → `npm ci --omit=dev` → `pm2 reload`。
+
+三个要点：
+
+1. **`.env` / `sql.env` / `node_modules` / `.tmp` / `logs` 在 rsync 的 `--exclude` 里**，
+   `--delete` 因此不会删掉服务器上的这些文件 —— 改了同步参数请保留这几条，否则会清空生产环境变量。
+2. 站点是静态为主，一次同步约 32MB，30Mbps 出口约 10 秒；`pm2 reload` 是平滑重启，不中断连接。
+3. 数据是构建产物：`public/js/data.js` 由 `tools/build_data.py` 生成，**提交它**而不是在服务器上重新抓取。
+
+### 9.5 日常流程
+
+```bash
+python tools/build_data.py     # 数据有变时先重建
+git add -A && git commit -m "data: 补齐 N 部详情"
+git push                       # 剩余的事交给 Actions
+```
+
+### 9.6 其他 git 部署选项
+
+| 方式 | 适合 | 代价 |
+|---|---|---|
+| Actions + rsync + PM2（上面的方案） | 自建服务器、要保留 MySQL 账号系统 | 需要一台服务器与一次密钥配置 |
+| Docker Compose + Actions | 想连 MySQL 一起托管 | 服务器要装 Docker，镜像构建耗时更长 |
+| Vercel / Netlify / Cloudflare Pages | 只想公开浏览 | 只能发 `public/`，`/api` 不存在，登录注册不可用 |
+| Gitee 仓库 + 自建 Webhook | 国内服务器拉取更快 | 需自己写 webhook 接收端 |
+
+只用静态托管时，把发布目录设为 `public`，并把 `public/js/pages/auth.js` 里接口失败的提示改成
+「登录服务未启用」，否则用户会看到一段 HTML 报错。
+

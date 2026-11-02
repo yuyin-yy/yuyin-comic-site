@@ -21,3 +21,7 @@ backup/
 # 系统文件
 .DS_Store
 Thumbs.db
+
+# WorkBuddy 本机发布状态（换机器不该带过去）
+.workbuddy/applications.yaml
+.*.genie

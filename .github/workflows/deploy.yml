@@ -1,0 +1,70 @@
+name: 部署到生产服务器
+
+# 触发：推送到 main 就同步到服务器并重启；也可以在 Actions 页面手动跑
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+concurrency:
+  group: deploy-prod
+  cancel-in-progress: true
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      # 没配密钥的仓库（比如刚建、还没上服务器）直接跳过，不让流水线变红
+      - name: 检查部署密钥是否就绪
+        id: check
+        run: |
+          if [ -z "${{ secrets.SSH_HOST }}" ] || [ -z "${{ secrets.SSH_KEY }}" ]; then
+            echo "ready=false" >> "$GITHUB_OUTPUT"
+            echo "::notice::未配置 SSH_HOST / SSH_KEY，本次只做仓库同步，跳过服务器部署。配置方法见 DEPLOY.md 第 9 节。"
+          else
+            echo "ready=true" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: 准备 SSH
+        if: steps.check.outputs.ready == 'true'
+        run: |
+          mkdir -p ~/.ssh
+          printf '%s\n' "${{ secrets.SSH_KEY }}" > ~/.ssh/deploy_key
+          chmod 600 ~/.ssh/deploy_key
+          {
+            echo "Host deploy-target"
+            echo "  HostName ${{ secrets.SSH_HOST }}"
+            echo "  User ${{ secrets.SSH_USER }}"
+            echo "  Port ${{ secrets.SSH_PORT || '22' }}"
+            echo "  IdentityFile ~/.ssh/deploy_key"
+            echo "  StrictHostKeyChecking accept-new"
+          } > ~/.ssh/config
+
+      - name: 同步代码到服务器
+        if: steps.check.outputs.ready == 'true'
+        run: |
+          # --delete 会清理服务器上多余的文件，因此下面被排除的项同时受保护：
+          # .env / sql.env / node_modules / .tmp 不会被删除，也不会被仓库覆盖。
+          rsync -az --delete \
+            --exclude '.git' \
+            --exclude '.github' \
+            --exclude 'node_modules' \
+            --exclude '.tmp' \
+            --exclude '.env' \
+            --exclude '.env.*' \
+            --exclude 'sql.env' \
+            --exclude 'logs' \
+            ./ deploy-target:"${{ secrets.DEPLOY_PATH }}/"
+
+      - name: 安装依赖并平滑重启
+        if: steps.check.outputs.ready == 'true'
+        run: |
+          ssh deploy-target "cd '${{ secrets.DEPLOY_PATH }}' \
+            && npm ci --omit=dev \
+            && pm2 reload deploy/ecosystem.config.js --update-env"
+
+      - name: 部署结果
+        if: steps.check.outputs.ready == 'true'
+        run: echo "已部署到 ${{ secrets.SSH_HOST }}:${{ secrets.DEPLOY_PATH }}"
