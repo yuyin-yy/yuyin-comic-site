@@ -83,3 +83,12 @@ updated/desc/**hasChs**/**pending**/readUrl/detailUrl/srcId/chs
   `users.sql`（users 表）。
 - 推荐：阿里云香港轻量 2核2G/30Mbps（免备案）；国内机房需 ICP 备案。
 - 部署说明见根目录 `DEPLOY.md`（含备份、排错表、更新流程）。
+
+## Git 与 CI（2026-11-02 起）
+- 仓库已 `git init`（`main` 分支），首个提交含 904 文件 / 32MB；提交身份只设在本仓库。
+- `.gitattributes`：封面标 binary，`* text=auto`（仓库里存 LF，服务器 checkout 也是 LF）。
+- `.github/workflows/deploy.yml`：push main → rsync（`--delete` + 保护性 exclude）→ `npm ci`
+  → `pm2 reload`。未配 Secrets 时 guard 步骤跳过部署而不报错。
+- **改 rsync 参数必须保留** `--exclude '.env' '.env*' 'sql.env' 'node_modules' '.tmp' 'logs'`，
+  它们同时是 `--delete` 的保护名单，删掉会清空服务器上的生产环境变量。
+- 远端仓库需用户自己建（GitHub 连接器只有只读权限，代建会 403）。详见 `DEPLOY.md` 第 9 节。

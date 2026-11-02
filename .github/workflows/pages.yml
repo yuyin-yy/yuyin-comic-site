@@ -1,0 +1,43 @@
+name: 发布静态站到 GitHub Pages
+
+# 只发布 public/ 目录（纯静态）。登录注册依赖 server.js + MySQL，静态托管用不了，
+# 其余功能（浏览、搜索、筛选、排行榜、追漫）全部正常。
+#
+# 一次性设置：仓库 Settings → Pages → Source 选「GitHub Actions」。
+# 免费账号要求仓库为 public；private 仓库需要 GitHub Pro 才能用 Pages。
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: 检出代码
+        uses: actions/checkout@v4
+
+      - name: 初始化 Pages
+        uses: actions/configure-pages@v5
+
+      - name: 打包 public/ 为站点产物
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: 'public'
+
+      - name: 发布
+        id: deployment
+        uses: actions/deploy-pages@v5
