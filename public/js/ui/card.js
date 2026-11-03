@@ -75,11 +75,37 @@
   }
 
   /** 批量渲染网格 */
-  function grid(host, items) {
+  /** 与 css 断点一致的列数（见 components.css 的 .grid 与 responsive.css） */
+  function cols() {
+    var w = window.innerWidth;
+    if (w <= 460) return 2;   // 手机竖屏
+    if (w <= 720) return 3;   // 大屏手机 / 平板竖屏
+    if (w <= 1080) return 4;  // 平板横屏
+    return 5;                 // 桌面
+  }
+
+  /**
+   * 渲染网格
+   * @param {Element} host  容器
+   * @param {Array}   items 作品数组
+   * @param {Object}  [opt] opt.trim=false 关闭收尾处理
+   *
+   * 手机端只有 2~3 列，条目数不是列数整数倍时最后一行只剩一两张、右边空一片。
+   * 默认按列数裁掉零头：宁可少展示一两部，也不留半行空位。
+   * 分页页（分类页）例外——每页条数本就整除列数，末页是「列表到底」，
+   * 裁掉会让最后那几部在任何一页都看不到，所以那边传 trim:false。
+   * 桌面 4~5 列不动，保持原有条目数。
+   */
+  function grid(host, items, opt) {
     if (!host) return;
     if (!items || !items.length) {
       host.innerHTML = '';
       return;
+    }
+    var c = cols();
+    if (!(opt && opt.trim === false) && c <= 3 && items.length > c) {
+      var rest = items.length % c;
+      if (rest) items = items.slice(0, items.length - rest);
     }
     host.innerHTML = items.map(card).join('');
     reveal(host);
@@ -144,5 +170,5 @@
     nodes.forEach(function (n) { io.observe(n); });
   }
 
-  YY.card = { render: card, grid: grid, rank: rank, bindFav: bindFav, reveal: reveal };
+  YY.card = { render: card, grid: grid, cols: cols, rank: rank, bindFav: bindFav, reveal: reveal };
 })(window.YY);

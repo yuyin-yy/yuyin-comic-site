@@ -40,21 +40,13 @@
 
     /** 当前网格列数，与 css 断点保持一致（1080 → 4 列，720 → 3 列，460 → 2 列） */
     function cols() {
-      var w = window.innerWidth;
-      if (w <= 460) return 2;
-      if (w <= 720) return 3;
-      if (w <= 1080) return 4;
-      return 5;
+      return YY.card.cols();
     }
 
-    /** 手机端只有 2~3 列，条目数不是列数整数倍时最后一行只剩一两部、右边留白。
-        这里按列数裁掉零头：宁可少展示几部，也不留半行空位。
-        手机另外压到 12 部（3 列 4 行 / 2 列 6 行），免得一屏一屏滑太久。 */
+    /** 手机端只放 12 部（3 列 4 行 / 2 列 6 行），整页更短。
+        末行零头由 YY.card.grid 统一裁掉，这里只负责数量上限。 */
     function fit(list) {
-      var c = cols();
-      if (c <= 3) list = list.slice(0, 12);
-      var rest = list.length % c;
-      return rest ? list.slice(0, list.length - rest) : list;
+      return cols() <= 3 ? list.slice(0, 12) : list;
     }
 
     function paint(list) {

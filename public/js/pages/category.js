@@ -148,7 +148,9 @@
       var start = (state.page - 1) * PAGE_SIZE;
       var show = list.slice(start, start + PAGE_SIZE);
 
-      YY.card.grid(gridHost, show);
+      // trim:false —— 每页 36 部本就整除 2/3/4/5 列，末页是「列表到底」，
+      // 交给 grid 裁零头会让最后几部在任何一页都看不到
+      YY.card.grid(gridHost, show, { trim: false });
       gridHost.style.display = show.length ? 'grid' : 'none';
 
       // 右上角：当前筛选结果与页码，和主流目录站的写法一致

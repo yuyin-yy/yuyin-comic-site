@@ -18,7 +18,13 @@
 
   var AUTOPLAY = 3000;   // 自动轮播间隔（毫秒），进度条同步这个时长
   var QUARTER = 90;      // 「近一个季度」的天数，超出后改用卡片墙
-  var CARD_STEP = 20;    // 卡片墙每次加载多少部（一行五列，四行）
+
+  /** 卡片墙每次加载多少部：列数 × 4 行。
+      按列数算而不是写死 20，手机端 3/2 列时才不会每次都在末行留半行空位；桌面仍是 20。 */
+  function cardStep() {
+    var c = YY.card && YY.card.cols ? YY.card.cols() : 5;
+    return c * 4;
+  }
 
   /** 日期 → 「今天 / 昨天 / 10月28日 周三」 */
   function dayLabel(dateStr) {
@@ -185,7 +191,7 @@
     // near：近一个季度，用完整列表；old：更早，用卡片墙
     var nearItems = byFresh.filter(function (x) { return within(x.updated, QUARTER); });
     var oldItems = byFresh.filter(function (x) { return !within(x.updated, QUARTER); });
-    var shownOld = CARD_STEP;
+    var shownOld = cardStep();
 
     function rowHTML(x) {
       return '<div class="upd-row">' +
@@ -250,7 +256,7 @@
     }
 
     $('#updMore').addEventListener('click', function () {
-      shownOld += CARD_STEP;
+      shownOld += cardStep();
       paint();
     });
 
