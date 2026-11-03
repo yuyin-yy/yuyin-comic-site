@@ -70,9 +70,9 @@
 
 .hero h1 {
   margin: 18px 0 14px;
-  /* 比原来收一档：文字块不再横扫到画面中部，把主视觉让出来 */
-  font-size: clamp(30px, 4.2vw, 46px);
-  line-height: 1.16;
+  /* 比原来收两档：文字块不再横扫到画面中部，把主视觉让出来 */
+  font-size: clamp(27px, 3.8vw, 42px);
+  line-height: 1.18;
   font-weight: 800;
   letter-spacing: -0.03em;
   text-shadow: 0 2px 18px rgba(0, 0, 0, 0.32);

@@ -38,9 +38,18 @@
 @media (max-width: 720px) {
   .container { padding: 0 16px; }
   .grid { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 20px 12px; }
-  .hero { min-height: 400px; }
-  .hero-inner { padding: calc(var(--nav-h) + 26px) 0 44px; }
-  .hero-stats { gap: 20px; }
+  .hero { min-height: 330px; }
+  /* 竖屏视口窄，cover 会把画面左右切掉；对焦点右移，保住人物主体 */
+  .hero-bg { background-position: 76% 14%; }
+  .hero-inner { padding: calc(var(--nav-h) + 18px) 0 28px; }
+  .hero h1 { font-size: 26px; line-height: 1.22; margin: 14px 0 10px; }
+  .hero-sub { font-size: 13.5px; max-width: 100%; }
+  .hero-search { margin-top: 18px; padding: 5px 5px 5px 15px; }
+  .hero-search input { font-size: 13.5px; height: 38px; }
+  .hero-search-btn { height: 38px; padding: 0 16px; font-size: 13px; }
+  .hero-tags { margin-top: 14px; gap: 6px; }
+  .hero-tags a { padding: 5px 12px; font-size: 12.5px; }
+  .hero-stats { margin-top: 22px; padding-top: 16px; gap: 20px; }
   .hero-stats b { font-size: 20px; }
   .section { padding: 40px 0; }
   .section-title { font-size: 20px; }
