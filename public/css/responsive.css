@@ -39,7 +39,7 @@
   .container { padding: 0 16px; }
   .grid { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 20px 12px; }
   .hero { min-height: 400px; }
-  .hero-inner { padding: 56px 0 44px; }
+  .hero-inner { padding: calc(var(--nav-h) + 26px) 0 44px; }
   .hero-stats { gap: 20px; }
   .hero-stats b { font-size: 20px; }
   .section { padding: 40px 0; }

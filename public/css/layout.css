@@ -17,6 +17,77 @@
 
 .site-header.is-solid { box-shadow: var(--shadow-sm); }
 
+/* ---------- 首页：导航浮在首屏图之上，深色磨砂玻璃 ----------
+   位置用 fixed 让首屏图从视口顶端开始铺，导航半透明压在图上；
+   向下滚动超过阈值就切回白色玻璃（is-solid），保证正文区可读。 */
+body[data-page="home"] .site-header {
+  position: fixed;
+  left: 0;
+  right: 0;
+  transition: background 0.32s var(--ease), border-color 0.32s var(--ease),
+    box-shadow 0.32s var(--ease);
+}
+
+body[data-page="home"] .site-header.is-over {
+  background: rgba(10, 12, 18, 0.34);
+  border-bottom-color: rgba(255, 255, 255, 0.1);
+  box-shadow: none;
+  -webkit-backdrop-filter: saturate(150%) blur(22px);
+  backdrop-filter: saturate(150%) blur(22px);
+}
+
+body[data-page="home"] .site-header.is-over .brand-text { color: #fff; }
+
+body[data-page="home"] .site-header.is-over .nav-link { color: rgba(255, 255, 255, 0.74); }
+body[data-page="home"] .site-header.is-over .nav-link:hover,
+body[data-page="home"] .site-header.is-over .nav-link[aria-current="page"] { color: #fff; }
+
+body[data-page="home"] .site-header.is-over .nav-search {
+  background: rgba(255, 255, 255, 0.12);
+  border-color: rgba(255, 255, 255, 0.16);
+}
+body[data-page="home"] .site-header.is-over .nav-search:focus-within {
+  background: rgba(255, 255, 255, 0.2);
+  border-color: rgba(255, 255, 255, 0.32);
+  box-shadow: none;
+}
+body[data-page="home"] .site-header.is-over .nav-search input { color: #fff; }
+body[data-page="home"] .site-header.is-over .nav-search input::placeholder {
+  color: rgba(255, 255, 255, 0.55);
+}
+body[data-page="home"] .site-header.is-over .nav-search svg { color: rgba(255, 255, 255, 0.6); }
+
+body[data-page="home"] .site-header.is-over .nav-icon {
+  background: rgba(255, 255, 255, 0.12);
+  color: rgba(255, 255, 255, 0.85);
+  border-color: rgba(255, 255, 255, 0.18);
+}
+body[data-page="home"] .site-header.is-over .nav-icon:hover {
+  color: #fff;
+  border-color: rgba(255, 255, 255, 0.42);
+  background: rgba(255, 255, 255, 0.22);
+}
+
+/* 深色的「登录」按钮在深色头部上反色成白底，避免糊成一片 */
+body[data-page="home"] .site-header.is-over .btn-dark {
+  background: rgba(255, 255, 255, 0.94);
+  color: var(--ink);
+}
+body[data-page="home"] .site-header.is-over .btn-dark:hover {
+  background: #fff;
+  color: var(--ink);
+}
+
+body[data-page="home"] .site-header.is-over .nav-toggle {
+  background: rgba(255, 255, 255, 0.14);
+  border-color: rgba(255, 255, 255, 0.24);
+}
+body[data-page="home"] .site-header.is-over .nav-toggle span,
+body[data-page="home"] .site-header.is-over .nav-toggle span::before,
+body[data-page="home"] .site-header.is-over .nav-toggle span::after {
+  background: #fff;
+}
+
 .nav {
   display: flex;
   align-items: center;

@@ -31,15 +31,23 @@
   position: absolute;
   inset: 0;
   z-index: -1;
+  /* 三层叠加：
+     1) 顶部一层薄暗底，托住浮在图上方的导航与品牌字；
+     2) 左侧用径向渐隐代替整块压暗 —— 文字背后仍有暗场保证可读，
+        但画面越往右越快透出来，不再像一块黑布；
+     3) 底部压暗，保证数据条那一行清晰。 */
   background:
-    linear-gradient(90deg, rgba(10, 12, 18, 0.92) 0%, rgba(10, 12, 18, 0.72) 42%, rgba(10, 12, 18, 0.15) 100%),
-    linear-gradient(0deg, rgba(10, 12, 18, 0.85), rgba(10, 12, 18, 0) 55%);
+    linear-gradient(180deg, rgba(10, 12, 18, 0.52) 0%, rgba(10, 12, 18, 0) 24%),
+    radial-gradient(86% 124% at 0% 52%,
+      rgba(10, 12, 18, 0.8) 0%, rgba(10, 12, 18, 0.5) 42%, rgba(10, 12, 18, 0) 74%),
+    linear-gradient(0deg, rgba(10, 12, 18, 0.82), rgba(10, 12, 18, 0) 50%);
 }
 
 .hero-inner {
-  padding: 76px 0 64px;
+  /* 导航 fixed 在首屏图上，这里让出它的高度，避免标题被压住 */
+  padding: calc(var(--nav-h) + 74px) 0 62px;
   color: #fff;
-  max-width: 660px;
+  max-width: 600px;
 }
 
 .eyebrow {
@@ -62,10 +70,12 @@
 
 .hero h1 {
   margin: 18px 0 14px;
-  font-size: clamp(32px, 5vw, 52px);
-  line-height: 1.14;
+  /* 比原来收一档：文字块不再横扫到画面中部，把主视觉让出来 */
+  font-size: clamp(30px, 4.2vw, 46px);
+  line-height: 1.16;
   font-weight: 800;
   letter-spacing: -0.03em;
+  text-shadow: 0 2px 18px rgba(0, 0, 0, 0.32);
 }
 
 .hero h1 em {
@@ -78,8 +88,9 @@
 
 .hero-sub {
   font-size: 15.5px;
-  color: rgba(255, 255, 255, 0.76);
-  max-width: 480px;
+  color: rgba(255, 255, 255, 0.78);
+  max-width: 430px;
+  text-shadow: 0 1px 12px rgba(0, 0, 0, 0.3);
 }
 
 /* 毛玻璃搜索条：半透明 + 背景模糊，不再用整块白底压住主视觉 */

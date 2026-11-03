@@ -91,7 +91,10 @@
       return '<a class="nav-link" href="' + n.href + '"' + cur + '>' + n.label + '</a>';
     }).join('');
 
-    host.className = 'site-header';
+    // 首屏就带上正确的状态类，避免加载瞬间先渲染成白色再渐变到深色
+    var isHome = document.body.getAttribute('data-page') === 'home';
+    var atTop = (window.scrollY || window.pageYOffset || 0) <= 32;
+    host.className = 'site-header' + (isHome && atTop ? ' is-over' : '');
     host.innerHTML =
       '<div class="container">' +
         '<nav class="nav" aria-label="主导航">' +
@@ -163,9 +166,15 @@
       location.href = 'index02.html?id=' + pick.id;
     });
 
-    /* 滚动时给头部加投影 */
+    /* 滚动时切头部状态：
+       首页的导航浮在首屏图上，未滚动时用深色玻璃（is-over），滚动后回到白色玻璃；
+       其余页面没有首屏大图，一直用白色玻璃。 */
+    var overHero = document.body.getAttribute('data-page') === 'home';
+    var threshold = overHero ? 32 : 8;
     var onScroll = function () {
-      host.classList.toggle('is-solid', window.scrollY > 8);
+      var y = window.scrollY || window.pageYOffset || 0;
+      host.classList.toggle('is-solid', y > threshold);
+      if (overHero) host.classList.toggle('is-over', y <= threshold);
     };
     window.addEventListener('scroll', onScroll, { passive: true });
     onScroll();
