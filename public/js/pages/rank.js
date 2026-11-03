@@ -21,8 +21,18 @@
   var IMG_FALLBACK = 'onerror="this.onerror=null;this.src=\'imgs/placeholder.svg\'"';
 
   var TOP_N = 8;      // 表格展示前 8 名
-  var GRID_COLS = 5;  // 「更多排行」每行 5 个
-  var GRID_ROWS = 4;  // 4 行 → 正好接住第 9-28 名
+  var GRID_ROWS = 4;  // 「更多排行」固定 4 行
+
+  /** 「更多排行」当前列数，与 rank.css 的断点一致
+      （1080 → 4 列、900 → 3 列、460 → 2 列）。
+      按列数 × 行数取条目，末行才不会只剩一两张、右边空一片。 */
+  function gridCols() {
+    var w = window.innerWidth;
+    if (w <= 460) return 2;
+    if (w <= 900) return 3;
+    if (w <= 1080) return 4;
+    return 5;
+  }
 
   /** 榜单类型定义 */
   var BOARDS = {
@@ -135,7 +145,7 @@
     }).join('');
 
     /* ------------------------- 更多排行：第 9 名往后 ------------------------- */
-    var rest = pool.slice(TOP_N, TOP_N + GRID_COLS * GRID_ROWS);
+    var rest = pool.slice(TOP_N, TOP_N + gridCols() * GRID_ROWS);
     var grid = $('#rankGrid');
     if (grid) {
       grid.innerHTML = rest.map(function (x, i) {

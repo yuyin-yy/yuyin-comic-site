@@ -53,6 +53,12 @@
      否则一路滑下去要翻过三块内容才到页脚 */
   .home-aside { display: none; }
   .home-latest { display: none; }
+  /* 排行榜：手机只看榜单主体，评分最高与关于榜单收起（热门题材保留） */
+  .rank-side .side-score,
+  .rank-side .side-about { display: none; }
+  /* 末行到页脚的间距：原先是 section 的 60px + 页脚 30px = 90px，太散 */
+  .rank-more { padding-bottom: 24px; }
+  .site-footer { margin-top: 16px; }
   .hero h1 { font-size: 26px; line-height: 1.22; margin: 14px 0 10px; }
   .hero-sub { font-size: 13.5px; max-width: 100%; }
   .hero-search { margin-top: 18px; padding: 5px 5px 5px 15px; }
