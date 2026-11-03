@@ -125,6 +125,11 @@
         '</nav>' +
       '</div>' +
       '<div class="drawer" id="navDrawer">' +
+        // 手机端导航栏里的搜索已隐藏，这里补一个入口，免得搜索功能在手机上消失
+        '<label class="drawer-search">' + icons.search +
+          '<input type="search" id="drawerSearch" placeholder="搜索作品名 / 作者" ' +
+            'aria-label="搜索漫画" autocomplete="off">' +
+        '</label>' +
         LINKS.map(function (n) {
           return '<a href="' + n.href + '">' + n.label + '</a>';
         }).join('') +
@@ -154,6 +159,17 @@
     bindSuggest($('#navSearch', host), $('#navSuggest', host), function (q) {
       location.href = 'category.html' + (q ? '?q=' + encodeURIComponent(q) : '');
     });
+
+    /* 抽屉里的搜索：回车即跳分类页，跟导航搜索同一套落点 */
+    var drawerSearch = $('#drawerSearch', host);
+    if (drawerSearch) {
+      drawerSearch.addEventListener('keydown', function (e) {
+        if (e.key !== 'Enter') return;
+        e.preventDefault();
+        var q = (drawerSearch.value || '').trim();
+        location.href = 'category.html' + (q ? '?q=' + encodeURIComponent(q) : '');
+      });
+    }
 
     /* 随机一部：全站统一处理，避免每处复制逻辑 */
     document.addEventListener('click', function (e) {

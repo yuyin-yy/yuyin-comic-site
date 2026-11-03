@@ -265,6 +265,36 @@ body[data-page="home"] .site-header.is-over .nav-toggle span::after {
 
 .drawer a:hover { background: var(--paper); }
 
+/* 抽屉顶部的搜索框：手机端导航栏的搜索被收起来了，入口挪到这里 */
+.drawer-search {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  height: 42px;
+  margin-bottom: 6px;
+  padding: 0 14px;
+  border-radius: 12px;
+  background: var(--paper);
+  border: 1px solid var(--line);
+}
+
+.drawer-search svg {
+  width: 16px; height: 16px;
+  flex: none;
+  color: var(--muted-2);
+}
+
+.drawer-search input {
+  flex: 1;
+  min-width: 0;
+  border: 0;
+  background: none;
+  font-size: 14px;
+  outline: none;
+}
+
+.drawer-search input::placeholder { color: var(--muted-2); }
+
 
 
 /* ---------------------------- 分类大菜单 ---------------------------- */

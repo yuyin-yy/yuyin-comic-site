@@ -37,11 +37,18 @@
 
 @media (max-width: 720px) {
   .container { padding: 0 16px; }
+  /* 导航内搜索在手机上撤掉：品牌 + 搜索 + 登录 + 汉堡 在 460~720 之间会挤爆，
+     汉堡被顶到视口外。搜索入口改到抽屉顶部，功能不丢。 */
+  .nav-search { display: none; }
+  .nav-right { gap: 8px; }
   .grid { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 20px 12px; }
   .hero { min-height: 330px; }
   /* 竖屏视口窄，cover 会把画面左右切掉；对焦点右移，保住人物主体 */
   .hero-bg { background-position: 76% 14%; }
-  .hero-inner { padding: calc(var(--nav-h) + 18px) 0 28px; }
+  .hero-inner { padding: calc(var(--nav-h) + 18px) 0 22px; }
+  /* 首屏之后的第一屏内容，上边距从 54 收到 26：
+     首屏自身已有暗色收尾，再叠 54px 会形成一条空白带 */
+  .home-main { padding-top: 26px; }
   .hero h1 { font-size: 26px; line-height: 1.22; margin: 14px 0 10px; }
   .hero-sub { font-size: 13.5px; max-width: 100%; }
   .hero-search { margin-top: 18px; padding: 5px 5px 5px 15px; }
@@ -91,7 +98,6 @@
   .my-avatar { width: 46px; height: 46px; }
   .my-id { gap: 12px; }
   .grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-  .nav-search { display: none; }
   .hero-search { flex-direction: row; padding: 6px 6px 6px 16px; }
   .detail-stats div + div { padding-left: 12px; }
   .detail-stats div { padding-right: 12px; }
