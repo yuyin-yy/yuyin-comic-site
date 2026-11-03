@@ -8,7 +8,10 @@
 .hero {
   position: relative;
   overflow: hidden;
-  min-height: 470px;
+  /* 首屏撑满一屏：窗口比内容高时，下一页的「人气推荐」会从底部露出一截，
+     看起来像漏在首页上。让首屏正好收在折线处，翻页要滚一下才看到下一屏。
+     小屏在 responsive.css 的 720 断点里改回固定高度，不跟着视口跑。 */
+  min-height: 100vh;
   display: flex;
   align-items: center;
   background: #10121a;
@@ -40,15 +43,8 @@
     linear-gradient(180deg, rgba(10, 12, 18, 0.52) 0%, rgba(10, 12, 18, 0) 24%),
     radial-gradient(86% 124% at 0% 52%,
       rgba(10, 12, 18, 0.8) 0%, rgba(10, 12, 18, 0.5) 42%, rgba(10, 12, 18, 0) 74%),
-    /* 底部把最后 11% 压到 0.93 以上：原图底部有一排反光字母，
-       浓度不够时它们会像“漏出来的字”，压住后画面才收得干净；
-       22%~62% 之间快速衰减，不影响上面的人物与场景。 */
-    linear-gradient(0deg,
-      rgba(10, 12, 18, 0.97) 0%,
-      rgba(10, 12, 18, 0.93) 11%,
-      rgba(10, 12, 18, 0.6) 22%,
-      rgba(10, 12, 18, 0.2) 40%,
-      rgba(10, 12, 18, 0) 62%);
+    /* 底部压暗，保证数据条那一行清晰 */
+    linear-gradient(0deg, rgba(10, 12, 18, 0.82), rgba(10, 12, 18, 0) 50%);
 }
 
 .hero-inner {
