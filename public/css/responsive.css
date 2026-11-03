@@ -49,6 +49,10 @@
   /* 首屏之后的第一屏内容，上边距从 54 收到 26：
      首屏自身已有暗色收尾，再叠 54px 会形成一条空白带 */
   .home-main { padding-top: 26px; }
+  /* 手机端只保留「人气推荐」：右侧榜单栏与底部「最近更新」整块隐藏，
+     否则一路滑下去要翻过三块内容才到页脚 */
+  .home-aside { display: none; }
+  .home-latest { display: none; }
   .hero h1 { font-size: 26px; line-height: 1.22; margin: 14px 0 10px; }
   .hero-sub { font-size: 13.5px; max-width: 100%; }
   .hero-search { margin-top: 18px; padding: 5px 5px 5px 15px; }

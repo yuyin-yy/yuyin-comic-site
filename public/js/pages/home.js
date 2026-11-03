@@ -37,7 +37,34 @@
     // 一屏 5 列 × 4 行：比原来多一行，右侧栏不再孤零零地多出一大块空白
     var HOME_COUNT = 20;
     var gridHost = $('#homeGrid');
-    YY.card.grid(gridHost, data.slice(0, HOME_COUNT));
+
+    /** 当前网格列数，与 css 断点保持一致（1080 → 4 列，720 → 3 列，460 → 2 列） */
+    function cols() {
+      var w = window.innerWidth;
+      if (w <= 460) return 2;
+      if (w <= 720) return 3;
+      if (w <= 1080) return 4;
+      return 5;
+    }
+
+    /** 手机端只有 2~3 列，条目数不是列数整数倍时最后一行只剩一两部、右边留白。
+        这里按列数裁掉零头：宁可少展示几部，也不留半行空位。
+        手机另外压到 12 部（3 列 4 行 / 2 列 6 行），免得一屏一屏滑太久。 */
+    function fit(list) {
+      var c = cols();
+      if (c <= 3) list = list.slice(0, 12);
+      var rest = list.length % c;
+      return rest ? list.slice(0, list.length - rest) : list;
+    }
+
+    function paint(list) {
+      if (!list.length) {
+        gridHost.innerHTML = '<div class="empty">' + icons.empty +
+          '<b>这个分类暂时没有作品</b><p>换一个标签看看，或去分类页按条件筛选</p></div>';
+        return;
+      }
+      YY.card.grid(gridHost, fit(list));
+    }
 
     // 切换分组：综合 / 国漫 / 日漫 / 恋爱
     // 地区用的是数据里的真实值（国漫 / 日韩 / 欧美 / 港台），
@@ -59,18 +86,28 @@
       }
     };
 
+    var activeGroup = 'all';
+    paint(groups[activeGroup]());
+
     var tabs = YY.$$('#homeTabs button');
     tabs.forEach(function (t) {
       t.addEventListener('click', function () {
         tabs.forEach(function (o) { o.setAttribute('aria-selected', 'false'); });
         t.setAttribute('aria-selected', 'true');
-        var list = groups[t.getAttribute('data-group')]();
-        YY.card.grid(gridHost, list);
-        if (!list.length) {
-          gridHost.innerHTML = '<div class="empty">' + icons.empty +
-            '<b>这个分类暂时没有作品</b><p>换一个标签看看，或去分类页按条件筛选</p></div>';
-        }
+        activeGroup = t.getAttribute('data-group');
+        paint(groups[activeGroup]());
       });
+    });
+
+    // 横竖屏切换会改变列数，零头需要重算一次
+    var lastCols = cols(), resizeTimer = null;
+    window.addEventListener('resize', function () {
+      clearTimeout(resizeTimer);
+      resizeTimer = setTimeout(function () {
+        if (cols() === lastCols) return;
+        lastCols = cols();
+        paint(groups[activeGroup]());
+      }, 160);
     });
 
     /* ------------------------- 侧栏 ------------------------- */
