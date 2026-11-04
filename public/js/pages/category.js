@@ -12,7 +12,13 @@
   'use strict';
 
   var $ = YY.$, $$ = YY.$$, esc = YY.esc, icons = YY.icons;
-  var PAGE_SIZE = 36;
+
+  /** 每页条数 = 当前列数 × 6 行。
+      按列数算而不是写死 36：任何宽度下每页都是整行，不会出现半行空位。
+      （桌面 5 列 30 部、平板 4 列 24 部、手机 3 列 18 部、小屏 2 列 12 部） */
+  function pageSize() {
+    return YY.card.cols() * 6;
+  }
 
   /** 排序策略；「今日热门」= 近 7 天有更新的优先，其次按热度 */
   var SORTERS = {
@@ -142,20 +148,21 @@
 
     function paint() {
       var list = filtered();
-      var totalPage = Math.max(1, Math.ceil(list.length / PAGE_SIZE));
+      var size = pageSize();
+      var totalPage = Math.max(1, Math.ceil(list.length / size));
       if (state.page > totalPage) state.page = totalPage;
 
-      var start = (state.page - 1) * PAGE_SIZE;
-      var show = list.slice(start, start + PAGE_SIZE);
+      var start = (state.page - 1) * size;
+      var show = list.slice(start, start + size);
 
-      // trim:false —— 每页 36 部本就整除 2/3/4/5 列，末页是「列表到底」，
+      // trim:false —— 每页条数 = 列数 × 6，本就整除；末页是「列表到底」，
       // 交给 grid 裁零头会让最后几部在任何一页都看不到
       YY.card.grid(gridHost, show, { trim: false });
       gridHost.style.display = show.length ? 'grid' : 'none';
 
       // 右上角：当前筛选结果与页码，和主流目录站的写法一致
       $('#catMeta').innerHTML = '当前筛选 <b>' + list.length + '</b> 部作品 · 第 ' +
-        state.page + ' / ' + totalPage + ' 页 · 每页 ' + PAGE_SIZE + ' 部';
+        state.page + ' / ' + totalPage + ' 页 · 每页 ' + size + ' 部';
 
       var cond = [];
       if (state.tag !== '全部') cond.push('题材「' + state.tag + '」');
@@ -223,6 +230,9 @@
     });
 
     paint();
+
+    // 列数变化后每页条数与总页数都变了，重画一次（页码会被 paint 夹回合法范围）
+    YY.card.watchCols(paint);
   }
 
   YY.pages = YY.pages || {};

@@ -74,7 +74,6 @@
     '</article>';
   }
 
-  /** 批量渲染网格 */
   /** 与 css 断点一致的列数（见 components.css 的 .grid 与 responsive.css） */
   function cols() {
     var w = window.innerWidth;
@@ -90,11 +89,11 @@
    * @param {Array}   items 作品数组
    * @param {Object}  [opt] opt.trim=false 关闭收尾处理
    *
-   * 手机端只有 2~3 列，条目数不是列数整数倍时最后一行只剩一两张、右边空一片。
-   * 默认按列数裁掉零头：宁可少展示一两部，也不留半行空位。
-   * 分页页（分类页）例外——每页条数本就整除列数，末页是「列表到底」，
-   * 裁掉会让最后那几部在任何一页都看不到，所以那边传 trim:false。
-   * 桌面 4~5 列不动，保持原有条目数。
+   * 手机端只有 2~3 列，条目数不是列数整数倍时最后一行只剩一两张、右边空一片；
+   * 平板 4 列时 10 部也会剩 2 张，所以**任何列数**都按列数裁掉零头：
+   * 宁可少展示一两部，也不留半行空位。
+   * 分页页（分类页）例外——每页条数按列数算，本就整除，
+   * 末页是「列表到底」，裁掉会让最后那几部在任何一页都看不到，那边传 trim:false。
    */
   function grid(host, items, opt) {
     if (!host) return;
@@ -103,7 +102,7 @@
       return;
     }
     var c = cols();
-    if (!(opt && opt.trim === false) && c <= 3 && items.length > c) {
+    if (!(opt && opt.trim === false) && items.length > c) {
       var rest = items.length % c;
       if (rest) items = items.slice(0, items.length - rest);
     }

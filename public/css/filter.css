@@ -206,7 +206,10 @@
 
 .cat-grid {
   display: grid;
-  grid-template-columns: repeat(6, minmax(0, 1fr));
+  /* 与全站网格同一套断点：5 列 / ≤1080 四列 / ≤720 三列 / ≤460 两列。
+     列数与 js/pages/category.js 的 pageSize()（列数 × 6 行）必须一致，
+     否则每页会有半行空位。 */
+  grid-template-columns: repeat(5, minmax(0, 1fr));
   gap: 24px 16px;
 }
 
@@ -258,10 +261,6 @@
 .pager .gap { color: var(--muted-2); font-size: 13px; padding: 0 2px; }
 
 /* ---------- 响应式 ---------- */
-@media (max-width: 1180px) {
-  .cat-grid { grid-template-columns: repeat(5, minmax(0, 1fr)); }
-}
-
 @media (max-width: 1080px) {
   .cat-grid { grid-template-columns: repeat(4, minmax(0, 1fr)); }
   .filter-card { padding: 18px 20px 10px; }
@@ -272,7 +271,6 @@
   .cat-hero h1 { font-size: 28px; }
   .filter-bar { flex-wrap: wrap; align-items: flex-start; gap: 12px; }
   .filter-search input { width: 120px; }
-  .cat-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
 }
 
 @media (max-width: 720px) {

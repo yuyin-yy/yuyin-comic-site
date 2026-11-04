@@ -261,6 +261,13 @@
     });
 
     paint();
+
+    // 列数变化后每次加载的张数（列数 × 4 行）也变了，
+    // 从第一批重新画，否则旧批次 20 张在 3 列下仍会剩 1 格
+    YY.card.watchCols(function () {
+      shownOld = cardStep();
+      paint();
+    });
   }
 
   YY.pages = YY.pages || {};
