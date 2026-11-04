@@ -570,7 +570,9 @@
 
 @media (max-width: 720px) {
   .upd-top { padding-top: 16px; }
-  .carousel { aspect-ratio: 4 / 3.4; min-height: 300px; }
+  /* width:100% 必须有：min-height 与 aspect-ratio 同时存在时，
+     浏览器会先按 min-height 反推出宽度（360px 屏上为 353px），把容器撑破 */
+  .carousel { aspect-ratio: 4 / 3.4; min-height: 300px; width: 100%; min-width: 0; }
   .car-art { width: 50%; }
   .car-info { width: 56%; }
   .car-info h2 { font-size: 16.5px; }
@@ -580,12 +582,15 @@
   .car-btn { height: 32px; padding: 0 14px; font-size: 12px; }
   .car-btn:not(.primary) { display: none; }
   .car-meta div b { max-width: 96px; font-size: 12px; }
-  .upd-row {
+  /* 手机端收行距：日期头 14/20/8 → 8/14/4，行内 10→7px，行间距 10→6px。
+     一屏能多看到约一条更新，桌面数值不动。 */
+  .upd-day { padding: 8px 14px 4px; font-size: 13px; }  .upd-row {
     grid-template-columns: 46px minmax(0, 1fr) auto;
-    gap: 10px;
-    padding: 10px 14px;
+    gap: 6px 10px;
+    padding: 7px 14px;
   }
   .upd-row img { width: 46px; height: 61px; }
+  .upd-t p { margin-top: 2px; }
   .upd-ch { grid-column: 2 / 3; font-size: 12px; }
   .upd-ch small { display: none; }
   .upd-go { height: 28px; padding: 0 9px; font-size: 11.5px; }
