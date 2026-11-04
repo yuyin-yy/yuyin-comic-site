@@ -36,12 +36,14 @@
     'precision highp float;',
     'varying vec2 vUv;',
     'uniform sampler2D uTex;',
+    'uniform sampler2D uMask;',  // 头发遮罩（灰度），r 通道
     'uniform vec2 uCanvas;',   // 画布 CSS 尺寸
     'uniform vec2 uImage;',    // 原图像素尺寸
     'uniform vec2 uFocus;',    // 取景焦点，对应 CSS 的 background-position
     'uniform vec2 uPointer;',  // -1..1
     'uniform float uTime;',
     'uniform float uZoom;',    // 呼吸缩放，>1 为放大
+    'uniform float uHair;',    // 0/1：遮罩就绪才开风场
 
     'void main() {',
     '  // p: 0..1，原点左上，和 CSS 的 background-position 同一套坐标',
@@ -55,13 +57,29 @@
     '  vec2 f = clamp(uFocus + uPointer * 0.026, 0.0, 1.0);',
     '  vec2 imgUV = f * (1.0 - s) + p * s;',
 
-    '  // 极缓流动：幅度约 3~5 图像像素，只在静止细看时能察觉',
     '  float t = uTime;',
-    '  imgUV.x += sin(imgUV.y * 9.0 + t * 0.50) * 0.0013',
-    '           + sin(imgUV.y * 3.3 - t * 0.27) * 0.0017;',
-    '  imgUV.y += cos(imgUV.x * 5.0 + t * 0.36) * 0.0009;',
 
-    '  vec3 col = texture2D(uTex, vec2(imgUV.x, 1.0 - imgUV.y)).rgb;',
+    '  // 极缓流动：幅度约 3~5 图像像素，只在静止细看时能察觉',
+    '  vec2 uv = imgUV;',
+    '  uv.x += sin(uv.y * 9.0 + t * 0.50) * 0.0013',
+    '        + sin(uv.y * 3.3 - t * 0.27) * 0.0017;',
+    '  uv.y += cos(uv.x * 5.0 + t * 0.36) * 0.0009;',
+
+    '  // 头发风场：只在遮罩内生效；发根（靠近头部）几乎不动，发梢摆幅最大',
+    '  float hm = texture2D(uMask, vec2(imgUV.x, 1.0 - imgUV.y)).r * uHair;',
+    '  if (hm > 0.004) {',
+    '    float root = smoothstep(0.66, 1.0, imgUV.x);',
+    '    float gust = 0.75 + 0.35 * sin(t * 0.21);',           // 阵风：强弱有起伏
+    '    float amp = hm * (0.18 + 0.82 * root) * gust;',
+    '    // 相位沿发丝走向（由左上到右下）推进，看起来是「风从发根刮向发梢」',
+    '    float phase = (imgUV.x * 0.90 + imgUV.y * 0.75) * 7.0 - t * 1.25;',
+    '    float w1 = sin(phase) * 0.0072;',
+    '    float w2 = sin(phase * 0.45 + 1.7) * 0.0046;',
+    '    uv.x += (w1 + w2) * amp;',
+    '    uv.y += cos(phase * 0.9 + 0.6) * 0.0022 * amp;',
+    '  }',
+
+    '  vec3 col = texture2D(uTex, vec2(uv.x, 1.0 - uv.y)).rgb;',
     '  gl_FragColor = vec4(col, 1.0);',
     '}'
   ].join('\n');
@@ -182,6 +200,8 @@
     var quadLoc = {
       aPos: gl.getAttribLocation(quadProg, 'aPos'),
       uTex: gl.getUniformLocation(quadProg, 'uTex'),
+      uMask: gl.getUniformLocation(quadProg, 'uMask'),
+      uHair: gl.getUniformLocation(quadProg, 'uHair'),
       uCanvas: gl.getUniformLocation(quadProg, 'uCanvas'),
       uImage: gl.getUniformLocation(quadProg, 'uImage'),
       uFocus: gl.getUniformLocation(quadProg, 'uFocus'),
@@ -209,7 +229,9 @@
     var dustCount = 0;
 
     var texture = gl.createTexture();
+    var maskTex = gl.createTexture();      // 头发遮罩，与底图同一套 UV
     var imageReady = false;
+    var maskReady = false;
     var imgW = 1;
     var imgH = 1;
 
@@ -250,9 +272,31 @@
       resize(true);
       start();
       canvas.classList.add('is-on');
+      loadMask();
     };
     img.onerror = function () { /* 保持 CSS 静态背景 */ };
     img.src = back.url;
+
+    /** 头发遮罩：和底图同一张照片的灰度图，约定放在同名 -hair.webp */
+    function loadMask() {
+      var src = back.url.replace(/\.(webp|jpe?g|png)$/i, '-hair.webp');
+      if (src === back.url) return;
+      var m = new Image();
+      m.decoding = 'async';
+      m.onload = function () {
+        if (disposed) return;
+        gl.bindTexture(gl.TEXTURE_2D, maskTex);
+        gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, true);
+        gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, m);
+        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
+        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
+        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
+        maskReady = true;
+      };
+      m.onerror = function () { maskReady = false; };   // 没有遮罩就只保留呼吸与光点
+      m.src = src;
+    }
 
     /* -------------------------------------------------------------- 布局 */
 
@@ -394,7 +438,12 @@
 
       gl.activeTexture(gl.TEXTURE0);
       gl.bindTexture(gl.TEXTURE_2D, texture);
+      gl.activeTexture(gl.TEXTURE1);
+      gl.bindTexture(gl.TEXTURE_2D, maskTex);
+      gl.activeTexture(gl.TEXTURE0);
       gl.uniform1i(quadLoc.uTex, 0);
+      gl.uniform1i(quadLoc.uMask, 1);
+      gl.uniform1f(quadLoc.uHair, maskReady ? 1 : 0);
       gl.uniform2f(quadLoc.uCanvas, cssW, cssH);
       gl.uniform2f(quadLoc.uImage, imgW, imgH);
       gl.uniform2f(quadLoc.uFocus, focus.fx, focus.fy);
@@ -502,7 +551,7 @@
     window.__heroFx = {
       frames: 0,
       info: function () {
-        return { w: cssW, h: cssH, dpr: dpr, dust: dustCount, img: [imgW, imgH] };
+        return { w: cssW, h: cssH, dpr: dpr, dust: dustCount, img: [imgW, imgH], hair: maskReady };
       }
     };
   }
