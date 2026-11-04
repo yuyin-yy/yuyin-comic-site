@@ -23,15 +23,10 @@
   var TOP_N = 8;      // 表格展示前 8 名
   var GRID_ROWS = 4;  // 「更多排行」固定 4 行
 
-  /** 「更多排行」当前列数，与 rank.css 的断点一致
-      （1080 → 4 列、900 → 3 列、460 → 2 列）。
-      按列数 × 行数取条目，末行才不会只剩一两张、右边空一片。 */
+  /** 「更多排行」当前列数：直接复用公共断点（card.cols），
+      避免 JS 和 rank.css 各写一套，缩放时两边判断不一致会重新出现末行空位 */
   function gridCols() {
-    var w = window.innerWidth;
-    if (w <= 460) return 2;
-    if (w <= 900) return 3;
-    if (w <= 1080) return 4;
-    return 5;
+    return YY.card.cols();
   }
 
   /** 榜单类型定义 */
@@ -145,9 +140,12 @@
     }).join('');
 
     /* ------------------------- 更多排行：第 9 名往后 ------------------------- */
-    var rest = pool.slice(TOP_N, TOP_N + gridCols() * GRID_ROWS);
+    // 抽成函数：列数随窗口变化，条目数必须在断点变化后重算，
+    // 否则电脑端缩成手机宽度、或手机放大成电脑宽度时，末行会重新空出一格
     var grid = $('#rankGrid');
-    if (grid) {
+    function paintMore() {
+      if (!grid) return;
+      var rest = pool.slice(TOP_N, TOP_N + gridCols() * GRID_ROWS);
       grid.innerHTML = rest.map(function (x, i) {
         return '<a class="rc" href="index02.html?id=' + x.id + '" title="' + esc(x.title) + '">' +
           '<span class="rc-cover">' +
@@ -161,6 +159,8 @@
         '</a>';
       }).join('');
     }
+    paintMore();
+    YY.card.watchCols(paintMore);
 
     /* ------------------------- 右侧：题材与高分 ------------------------- */
     $('#rankTags').innerHTML = YY.tagStats().slice(0, 8).map(function (t) {

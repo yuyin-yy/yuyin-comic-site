@@ -507,11 +507,14 @@
 
 .rc-meta em { font-style: normal; color: var(--accent); font-weight: 700; }
 
+/* 「更多排行」的列数断点必须与 components.css 的 .grid 一致
+   （1080 → 4、720 → 3、460 → 2），JS 用 YY.card.cols() 取同一个值。
+   三条规则按宽度降序排列在文件末尾，靠源码顺序决定覆盖关系。 */
 @media (max-width: 1080px) {
   .rank-grid { grid-template-columns: repeat(4, minmax(0, 1fr)); }
 }
 
-@media (max-width: 900px) {
+@media (max-width: 720px) {
   .rank-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
 }
 

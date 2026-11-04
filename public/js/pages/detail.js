@@ -149,7 +149,11 @@
       return x.id !== item.id &&
         ((firstTag && (x.tags || []).indexOf(firstTag) > -1) || x.region === item.region);
     }).slice(0, 10);
-    YY.card.grid($('#relatedGrid'), related);
+    var relatedHost = $('#relatedGrid');
+    var paintRelated = function () { YY.card.grid(relatedHost, related); };
+    paintRelated();
+    // 列数变化后要重画：10 部在 3 列下会剩 1 张，靠 grid 重新裁零头
+    YY.card.watchCols(paintRelated);
   }
 
   YY.pages = YY.pages || {};

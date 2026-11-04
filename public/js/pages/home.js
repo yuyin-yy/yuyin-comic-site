@@ -91,15 +91,9 @@
       });
     });
 
-    // 横竖屏切换会改变列数，零头需要重算一次
-    var lastCols = cols(), resizeTimer = null;
-    window.addEventListener('resize', function () {
-      clearTimeout(resizeTimer);
-      resizeTimer = setTimeout(function () {
-        if (cols() === lastCols) return;
-        lastCols = cols();
-        paint(groups[activeGroup]());
-      }, 160);
+    // 横竖屏切换会改变列数：条目数与末行零头都要重算
+    YY.card.watchCols(function () {
+      paint(groups[activeGroup]());
     });
 
     /* ------------------------- 侧栏 ------------------------- */

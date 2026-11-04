@@ -66,6 +66,8 @@
     paint();
     // 卡片上的爱心被点击时，这里会收到通知并实时刷新
     document.addEventListener('yy:favs', paint);
+    // 列数变化后重画，让末行零头跟着重算
+    YY.card.watchCols(paint);
 
     /* ------------------------- 清空 ------------------------- */
     $('#clearFavs').addEventListener('click', function () {
@@ -80,7 +82,10 @@
 
     /* ------------------------- 推荐补充 ------------------------- */
     var suggest = YY.data.filter(function (x) { return !YY.favs.has(x.id); }).slice(0, 10);
-    YY.card.grid($('#mySuggest'), suggest);
+    var suggestHost = $('#mySuggest');
+    var paintSuggest = function () { YY.card.grid(suggestHost, suggest); };
+    paintSuggest();
+    YY.card.watchCols(paintSuggest);
   }
 
   YY.pages = YY.pages || {};

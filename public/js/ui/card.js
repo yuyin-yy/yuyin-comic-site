@@ -111,6 +111,34 @@
     reveal(host);
   }
 
+  /**
+   * 列数变化回调：窗口跨断点（横竖屏、拖窗口）时触发一次，160ms 防抖。
+   *
+   * 网格条目数是在渲染那一刻按当时列数算的，只改 css 不改数据的话，
+   * 缩放后会重新出现「末行只剩一两张、右边空一片」。需要的页面注册这个回调，
+   * 在断点变化时重画一次即可。
+   */
+  var colWatchers = [];
+  var watchBound = false;
+
+  function watchCols(fn) {
+    if (typeof fn === 'function') colWatchers.push(fn);
+    if (watchBound) return;
+    watchBound = true;
+
+    var timer = null;
+    var last = cols();
+    window.addEventListener('resize', function () {
+      clearTimeout(timer);
+      timer = setTimeout(function () {
+        var now = cols();
+        if (now === last) return;
+        last = now;
+        colWatchers.forEach(function (f) { f(now); });
+      }, 160);
+    });
+  }
+
   /** 侧栏排行榜：名次 + 缩略图 + 标题 + 进度 */
   function rank(host, items) {
     if (!host) return;
@@ -170,5 +198,8 @@
     nodes.forEach(function (n) { io.observe(n); });
   }
 
-  YY.card = { render: card, grid: grid, cols: cols, rank: rank, bindFav: bindFav, reveal: reveal };
+  YY.card = {
+    render: card, grid: grid, cols: cols, watchCols: watchCols,
+    rank: rank, bindFav: bindFav, reveal: reveal
+  };
 })(window.YY);
