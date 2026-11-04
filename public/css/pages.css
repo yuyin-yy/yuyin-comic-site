@@ -29,6 +29,26 @@
   z-index: -2;
 }
 
+/* 动态层：与 .hero-bg 同层、在其之上，仍在 .hero::after 的遮罩之下，
+   所以左侧文字区域会自然被压暗。WebGL 就绪后淡入，避免第一帧闪白。 */
+.hero-fx {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  z-index: -2;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.9s ease;
+}
+
+.hero-fx.is-on { opacity: 1; }
+
+/* 系统开启「减少动态效果」时彻底不显示，回落到静态背景 */
+@media (prefers-reduced-motion: reduce) {
+  .hero-fx { display: none; }
+}
+
 .hero::after {
   content: "";
   position: absolute;

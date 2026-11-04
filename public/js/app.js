@@ -34,6 +34,11 @@
     if (route && YY.pages[route.page]) {
       YY.pages[route.page].init();
     }
+
+    // 首屏背景动态层：只首页有，内部自己判断 WebGL / 减少动效 / ?fx=0
+    if (key === 'home' && YY.heroFx) {
+      YY.heroFx.init();
+    }
   }
 
   if (document.readyState === 'loading') {

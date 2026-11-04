@@ -27,6 +27,8 @@
     <!-- Hero：主视觉 + 搜索入口，背景图取自 imgs/offen -->
     <section class="hero">
       <div class="hero-bg" aria-hidden="true"></div>
+      <!-- 动态层：WebGL 接管后淡入；不支持时保持上面的静态背景 -->
+      <canvas class="hero-fx" id="heroFx" aria-hidden="true"></canvas>
       <div class="container">
         <div class="hero-inner">
           <span class="eyebrow">余音的小破站 · 每日更新</span>
@@ -131,6 +133,7 @@
   <script src="js/ui/footer.js"></script>
   <script src="js/ui/card.js"></script>
   <script src="js/ui/mascot.js"></script>
+  <script src="js/ui/hero-fx.js"></script>
   <script src="js/pages/home.js"></script>
   <script src="js/app.js"></script>
 </body>
