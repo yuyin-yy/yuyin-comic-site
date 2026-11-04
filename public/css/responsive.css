@@ -59,15 +59,22 @@
   /* 末行到页脚的间距：原先是 section 的 60px + 页脚 30px = 90px，太散 */
   .rank-more { padding-bottom: 24px; }
   .site-footer { margin-top: 16px; }
-  .hero h1 { font-size: 26px; line-height: 1.22; margin: 14px 0 10px; }
-  .hero-sub { font-size: 13.5px; max-width: 100%; }
-  .hero-search { margin-top: 18px; padding: 5px 5px 5px 15px; }
+  /* 手机端首屏只留「一句文案 + 搜索框」：
+     顶部小标题、大标题、题材标签、数据条整块撤掉，把画面让给背景图。
+     桌面端这些元素照常显示，不受影响。 */
+  .hero .eyebrow,
+  .hero h1,
+  .hero-tags,
+  .hero-stats { display: none; }
+  .hero-inner { text-align: center; }
+  .hero-sub {
+    font-size: 14.5px;
+    max-width: 100%;
+    margin: 0 auto;
+  }
+  .hero-search { margin: 18px auto 0; padding: 5px 5px 5px 15px; }
   .hero-search input { font-size: 13.5px; height: 38px; }
   .hero-search-btn { height: 38px; padding: 0 16px; font-size: 13px; }
-  .hero-tags { margin-top: 14px; gap: 6px; }
-  .hero-tags a { padding: 5px 12px; font-size: 12.5px; }
-  .hero-stats { margin-top: 22px; padding-top: 16px; gap: 20px; }
-  .hero-stats b { font-size: 20px; }
   .section { padding: 40px 0; }
   .section-title { font-size: 20px; }
   .section-head { flex-direction: column; align-items: flex-start; gap: 14px; }
