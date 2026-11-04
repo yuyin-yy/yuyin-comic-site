@@ -21,12 +21,25 @@
 .hero-bg {
   position: absolute;
   inset: 0;
-  background-image: url("../imgs/offen/lliij-2.webp");
+  /* 按屏宽分档（tools/resize_hero.py 生成）：原图 3000x1250 直接下发时，
+     手机光解码就要 15MB 像素、首屏会白很久。默认给最轻的一档，
+     再用 min-width 往上提，手机无论如何都不会碰到大图。
+     注意：hero-fx.js 是从 .hero-bg 的计算样式里取图片地址的，
+     所以这里换图它也会跟着换，不用另改 JS。 */
+  background-image: url("../imgs/offen/lliij-2-1400.webp");
   background-size: cover;
   background-position: center 28%;
   transform: scale(1.04);
   filter: saturate(1.05);
   z-index: -2;
+}
+
+/* 中屏与桌面再放宽一档；大屏直接给原图。三段互斥，不会重复下载 */
+@media (min-width: 721px) {
+  .hero-bg { background-image: url("../imgs/offen/lliij-2-2000.webp"); }
+}
+@media (min-width: 1441px) {
+  .hero-bg { background-image: url("../imgs/offen/lliij-2.webp"); }
 }
 
 /* 动态层：与 .hero-bg 同层、在其之上，仍在 .hero::after 的遮罩之下，

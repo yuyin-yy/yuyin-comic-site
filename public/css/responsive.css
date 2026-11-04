@@ -58,7 +58,25 @@
   .rank-side .side-about { display: none; }
   /* 末行到页脚的间距：原先是 section 的 60px + 页脚 30px = 90px，太散 */
   .rank-more { padding-bottom: 24px; }
-  .site-footer { margin-top: 16px; }
+  /* 页脚：手机上整块压薄。版权条与「数据整理自公开目录…」那一行撤掉
+     （信息价值低，却要多占一屏），行距、留白一起收紧，
+     黑底才不会在页面末尾压出一大块。桌面端保持原样。 */
+  .site-footer {
+    margin-top: 16px;
+    padding: 24px 0 20px;
+    font-size: 13px;
+  }
+  .site-footer p { line-height: 1.6; }
+  .footer-grid { padding-bottom: 0; border-bottom: 0; }
+  .footer-brand { gap: 10px; margin-bottom: 10px; font-size: 15px; }
+  .footer-brand img { width: 34px; height: 34px; }
+  .site-footer h4 { margin-bottom: 6px; }
+  .site-footer .footer-contact p {
+    margin-bottom: 3px;
+    font-size: 12.5px;
+    line-height: 1.55;
+  }
+  .footer-bottom { display: none; }
   /* 手机端首屏只留「一句文案 + 搜索框」：
      顶部小标题、大标题、题材标签、数据条整块撤掉，把画面让给背景图。
      桌面端这些元素照常显示，不受影响。 */
@@ -107,7 +125,7 @@
   .mascot-bubble { max-width: 164px; font-size: 12px; margin-bottom: 58px; padding: 9px 12px; }
   .mascot-toggle { left: 10px; bottom: 88px; width: 38px; height: 30px; font-size: 11px; }
   .mascot.hidden + .mascot-toggle { bottom: 12px; }
-  .footer-grid { grid-template-columns: 1fr; gap: 24px; }
+  .footer-grid { grid-template-columns: 1fr; gap: 14px; }
   .page-head h1, .my-head h1 { font-size: 24px; }
 }
 

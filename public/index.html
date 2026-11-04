@@ -9,6 +9,10 @@
   <title>余音的小破站 · 漫画推荐与追更</title>
   <meta name="description" content="余音的小破站：整理日漫与国漫的连载进度、评分与简介，按热度推荐，支持关键词搜索与追漫收藏。">
   <meta name="theme-color" content="#f5f3ef">
+  <!-- 首屏图按屏宽分档，提前抓取：手机 1400 / 中屏 2000 / 大屏原图 -->
+  <link rel="preload" as="image" href="imgs/offen/lliij-2-1400.webp" media="(max-width: 720px)">
+  <link rel="preload" as="image" href="imgs/offen/lliij-2-2000.webp" media="(min-width: 721px) and (max-width: 1440px)">
+  <link rel="preload" as="image" href="imgs/offen/lliij-2.webp" media="(min-width: 1441px)">
   <!-- 样式按层拆分：基础 → 骨架 → 组件 → 页面 → 响应式 -->
   <link rel="stylesheet" href="css/base.css">
   <link rel="stylesheet" href="css/layout.css">
