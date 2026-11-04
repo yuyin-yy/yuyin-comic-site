@@ -277,12 +277,19 @@
   .cat-hero { padding: 18px 0 46px; }
   .cat-hero h1 { font-size: 24px; }
   .cat-hero p { font-size: 13px; }
-  .filter-card { margin-top: -32px; border-radius: 14px; padding: 16px 14px 8px; }
-  .filter-bar h2 { font-size: 17px; }
+  .filter-card { margin-top: -28px; border-radius: 14px; padding: 12px 12px 4px; }
+  .filter-bar h2 { font-size: 16px; }
   .filter-bar .filter-search { order: 3; width: 100%; }
   .filter-search input { width: 100%; }
-  .f-row { grid-template-columns: 1fr; gap: 6px; }
-  .f-row > span { line-height: 1.4; font-size: 12.5px; }
+  /* 手机端筛选区收密度：
+     标签从 32px 高的胶囊压到 28px、左右内边距 18→11px；
+     标签回到「左侧竖排小标题 + 右侧平铺」的紧凑排法（标题列 44px），
+     不再每个分组各占一整行标题，五组省下约 150px 高度（整卡 758 → 约 600）。 */
+  .f-rows { padding: 4px 0 2px; }
+  .f-row { grid-template-columns: 40px minmax(0, 1fr); gap: 8px; padding: 5px 0; }
+  .f-row > span { font-size: 12px; line-height: 28px; }
+  .f-opts { gap: 6px; }
+  .f-opt { height: 28px; padding: 0 10px; font-size: 12px; }
   .cat-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 18px 12px; }
   .pager { padding: 26px 0 46px; }
 }
