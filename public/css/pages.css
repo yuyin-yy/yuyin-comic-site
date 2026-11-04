@@ -44,11 +44,6 @@
 
 .hero-fx.is-on { opacity: 1; }
 
-/* 系统开启「减少动态效果」时彻底不显示，回落到静态背景 */
-@media (prefers-reduced-motion: reduce) {
-  .hero-fx { display: none; }
-}
-
 .hero::after {
   content: "";
   position: absolute;

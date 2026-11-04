@@ -125,6 +125,7 @@
 
   /* ---------------------------------------------------------------- 工具 */
 
+  /** 编译单个着色器；失败返回 null（调用方据此放弃整个动态层） */
   function makeShader(gl, type, src) {
     var sh = gl.createShader(type);
     gl.shaderSource(sh, src);
@@ -136,6 +137,7 @@
     return sh;
   }
 
+  /** 链接顶点/片元着色器为程序；失败返回 null。着色器对象链接后即可释放 */
   function makeProgram(gl, vsSrc, fsSrc) {
     var vs = makeShader(gl, gl.VERTEX_SHADER, vsSrc);
     var fs = makeShader(gl, gl.FRAGMENT_SHADER, fsSrc);
@@ -169,6 +171,12 @@
 
   /* ------------------------------------------------------------------ 主体 */
 
+  /**
+   * 初始化动态层。以下任一条件成立时直接返回、不接管画布，
+   * 页面保留 CSS 的 .hero-bg 静态背景：
+   *   没有 .hero / .hero-bg / #heroFx、系统开启「减少动态效果」、
+   *   带 ?fx=0、浏览器不支持 WebGL、着色器编译失败。
+   */
   function init() {
     var hero = document.querySelector('.hero');
     var bg = document.querySelector('.hero-bg');
@@ -181,8 +189,11 @@
     var canvas = document.getElementById('heroFx');
     if (!canvas) return;
 
-    var gl = canvas.getContext('webgl2', { antialias: false, alpha: false, powerPreference: 'low-power' })
-          || canvas.getContext('webgl', { antialias: false, alpha: false });
+    var gl = canvas.getContext('webgl2', { antialias: false, alpha: false, powerPreference: 'low-power' });
+    var isGL2 = !!gl;                    // WebGL2 才允许非 2 的幂贴图开 mipmap
+    if (!gl) {
+      gl = canvas.getContext('webgl', { antialias: false, alpha: false });
+    }
     if (!gl) return;
 
     var quadProg = makeProgram(gl, VS_QUAD, FS_QUAD);
@@ -239,15 +250,18 @@
     var focus = { fx: 0.5, fy: 0.28 };
     var pointer = { x: 0, y: 0 };      // 当前值（缓动）
     var pointerTo = { x: 0, y: 0 };    // 目标值
-    var time = 0;
     var started = 0;
+    var frameCount = 0;                // 仅用于诊断（info().frames）
     var raf = 0;
     var visible = true;
     var disposed = false;
 
     /* ---------------------------------------------------------- 资源加载 */
 
-    var back = readBackdrop(bg);
+    var bgSrc = readBackdrop(bg);   // 启动时读一次：图片地址 + 初始焦点
+    focus.fx = bgSrc.fx;
+    focus.fy = bgSrc.fy;
+
     var img = new Image();
     img.decoding = 'async';
     img.onload = function () {
@@ -255,18 +269,8 @@
       imgW = img.naturalWidth || 1920;
       imgH = img.naturalHeight || 800;
 
-      gl.bindTexture(gl.TEXTURE_2D, texture);
-      gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, true);
-      gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, img);
-      gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
-      gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
-      gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
-      gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
-      // WebGL2 允许非 2 的幂贴图生成 mipmap，缩小时不会因为走样而抖
-      if (gl.generateMipmap && canvas.getContext('webgl2')) {
-        gl.generateMipmap(gl.TEXTURE_2D);
-        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR_MIPMAP_LINEAR);
-      }
+      // 底图会从 3000px 缩到屏幕宽度，走 mipmap 才能避免运动时出现摩尔纹
+      uploadTexture(texture, img, isGL2);
 
       imageReady = true;
       resize(true);
@@ -275,31 +279,45 @@
       loadMask();
     };
     img.onerror = function () { /* 保持 CSS 静态背景 */ };
-    img.src = back.url;
+    img.src = bgSrc.url;
 
-    /** 头发遮罩：和底图同一张照片的灰度图，约定放在同名 -hair.webp */
+    /** 头发遮罩：与底图同名的灰度图（xxx.webp → xxx-hair.webp），缺图则不平移 */
     function loadMask() {
-      var src = back.url.replace(/\.(webp|jpe?g|png)$/i, '-hair.webp');
-      if (src === back.url) return;
+      var src = bgSrc.url.replace(/\.(webp|jpe?g|png)$/i, '-hair.webp');
+      if (src === bgSrc.url) return;
       var m = new Image();
       m.decoding = 'async';
       m.onload = function () {
         if (disposed) return;
-        gl.bindTexture(gl.TEXTURE_2D, maskTex);
-        gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, true);
-        gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, m);
-        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
-        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
-        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
-        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
+        // 遮罩不参与缩小显示，不需要 mipmap
+        uploadTexture(maskTex, m, false);
         maskReady = true;
       };
-      m.onerror = function () { maskReady = false; };   // 没有遮罩就只保留呼吸与光点
+      m.onerror = function () { /* 拿不到遮罩就退化为「只有呼吸和光点」 */ };
       m.src = src;
+    }
+
+    /** 上传一张图片为贴图；mipmap 仅在 WebGL2 下可用（它允许非 2 的幂） */
+    function uploadTexture(tex, source, mipmap) {
+      gl.bindTexture(gl.TEXTURE_2D, tex);
+      gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, true);   // 让 v=0 对应图片顶部
+      gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, source);
+      gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
+      gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+      gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
+      gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
+      if (mipmap) {
+        gl.generateMipmap(gl.TEXTURE_2D);
+        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR_MIPMAP_LINEAR);
+      }
     }
 
     /* -------------------------------------------------------------- 布局 */
 
+    /**
+     * 同步画布像素尺寸与取景焦点。
+     * rebuild=true 时重建光点：列数/尺寸变了，光点密度要跟着重算。
+     */
     function resize(rebuild) {
       var rect = hero.getBoundingClientRect();
       var w = Math.max(1, Math.round(rect.width));
@@ -314,15 +332,15 @@
         cssH = h;
       }
 
-      var b = readBackdrop(bg);   // 断点会改 background-position，这里重新读
-      back.fx = b.fx;
-      back.fy = b.fy;
+      // 断点会改 background-position（手机端 76% / 14%），每次尺寸变化都重读
+      var b = readBackdrop(bg);
       focus.fx = b.fx;
       focus.fy = b.fy;
 
       if (rebuild) buildDust();
     }
 
+    /** cover 裁切后，画布只显示原图的这一比例（另一维为 1，表示铺满） */
     function coverScale() {
       var ia = imgW / imgH;
       var ca = (cssW || 1) / (cssH || 1);
@@ -355,6 +373,11 @@
       }
     }
 
+    /**
+     * 生成光点。位置是随机的，但落在亮部的概率更高（lum² 加权），
+     * 这样光点分布与画面里本身的星光/高光一致，不会在暗处显脏。
+     * 颜色直接取该点像素并整体提亮，保证与画面同一色系。
+     */
     function buildDust() {
       if (!imageReady) return;          // 图片还没解码完，等 onload 里再建
       var isSmall = window.innerWidth <= 720;
@@ -421,8 +444,8 @@
 
     /* ------------------------------------------------------------ 渲染循环 */
 
+    /** 渲染一帧：底图（含呼吸、头发挥动）→ 叠加光点 */
     function draw(t) {
-      time = t;
       // 呼吸：22 秒一轮。基准 1.045 对齐 .hero-bg 的 transform: scale(1.04)，
       // 否则取景范围会比静态版大一圈，切换瞬间会看到画面「跳一下」
       var zoom = 1.045 + 0.012 * Math.sin(t * 0.285) + 0.004 * Math.sin(t * 0.13);
@@ -486,7 +509,7 @@
       if (!started) started = now;
       if (document.hidden || !visible) return;   // 移出视口 / 切后台就停画
       draw((now - started) / 1000);
-      if (window.__heroFx) window.__heroFx.frames++;
+      frameCount++;
       raf = window.requestAnimationFrame(loop);
     }
 
@@ -547,11 +570,13 @@
       canvas.classList.remove('is-on');   // 退回 CSS 静态背景
     }, false);
 
-    // 暴露给调试用：确认帧是否在跑（不影响正常渲染）
+    // 诊断钩子：控制台可用 __heroFx.info() 查看尺寸、光点数、遮罩是否就绪
     window.__heroFx = {
-      frames: 0,
       info: function () {
-        return { w: cssW, h: cssH, dpr: dpr, dust: dustCount, img: [imgW, imgH], hair: maskReady };
+        return {
+          w: cssW, h: cssH, dpr: dpr, frames: frameCount,
+          dust: dustCount, img: [imgW, imgH], hair: maskReady
+        };
       }
     };
   }
