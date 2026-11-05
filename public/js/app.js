@@ -25,11 +25,15 @@
     var key = document.body.getAttribute('data-page') || '';
     var route = ROUTES[key];
 
-    YY.nav.render(route ? route.nav : '');
-    YY.footer.render();
-    YY.card.bindFav();
-    YY.card.reveal();
-    YY.mascot.init();
+    // 按页面裁剪过依赖的页面（如登录页只有 core + auth + mascot）会缺模块，
+    // 这里逐个判断，缺了就跳过，不让一个未引入的模块把整页启动流程打断。
+    if (YY.nav) YY.nav.render(route ? route.nav : '');
+    if (YY.footer) YY.footer.render();
+    if (YY.card) {
+      YY.card.bindFav();
+      YY.card.reveal();
+    }
+    if (YY.mascot) YY.mascot.init();
 
     if (route && YY.pages[route.page]) {
       YY.pages[route.page].init();
