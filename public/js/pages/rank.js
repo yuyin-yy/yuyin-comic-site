@@ -130,7 +130,8 @@
       return '<div class="rank-row">' +
         '<span class="rk' + cls + '">' + rank + '</span>' +
         '<a class="rank-book" href="index02.html?id=' + x.id + '">' +
-          '<img src="' + x.cover + '" alt="" loading="lazy" referrerpolicy="no-referrer" ' + IMG_FALLBACK + '>' +
+          '<img src="' + YY.blank + '" data-src="' + x.cover + '" alt="" ' +
+            'decoding="async" referrerpolicy="no-referrer" ' + IMG_FALLBACK + '>' +
           '<span class="rb-text"><b>' + esc(x.title) + '</b><small>' +
             esc(x.author || '原站未标注') + ' · ' + esc(x.status || '连载中') + '</small></span>' +
         '</a>' +
@@ -138,6 +139,7 @@
         '<span class="rk-heat">' + YY.fmtHeat(x.heat) + '</span>' +
       '</div>';
     }).join('');
+    YY.card.lazyCovers($('#rankRows'));
 
     /* ------------------------- 更多排行：第 9 名往后 ------------------------- */
     // 抽成函数：列数随窗口变化，条目数必须在断点变化后重算，
@@ -149,7 +151,8 @@
       grid.innerHTML = rest.map(function (x, i) {
         return '<a class="rc" href="index02.html?id=' + x.id + '" title="' + esc(x.title) + '">' +
           '<span class="rc-cover">' +
-            '<img src="' + x.cover + '" alt="《' + esc(x.title) + '》封面" loading="lazy" ' +
+            '<img src="' + YY.blank + '" data-src="' + x.cover + '" ' +
+              'alt="《' + esc(x.title) + '》封面" decoding="async" ' +
               'referrerpolicy="no-referrer" ' + IMG_FALLBACK + '>' +
             '<span class="rc-no">' + (TOP_N + i + 1) + '</span>' +
           '</span>' +
@@ -158,6 +161,7 @@
             '<em>' + YY.fmtHeat(x.heat) + '</em></span>' +
         '</a>';
       }).join('');
+      YY.card.lazyCovers(grid);
     }
     paintMore();
     YY.card.watchCols(paintMore);

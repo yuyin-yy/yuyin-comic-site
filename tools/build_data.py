@@ -19,6 +19,7 @@ import sys
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 SRC = os.path.join(ROOT, 'data', 'guazi_comics.json')
 OUT = os.path.join(ROOT, 'public', 'js', 'data.js')
+OUT_DETAIL = os.path.join(ROOT, 'public', 'js', 'data-detail.js')
 
 
 def chapter_no(name):
@@ -51,20 +52,37 @@ def main():
     for i, x in enumerate(items):
         x['id'] = i + 1
 
-    # 字段顺序固定，便于人工 review 与 diff
+    # 字段顺序固定，便于人工 review 与 diff。
+    # 简介与章节目录（desc / chs）不在这里：它们合计占三成多，而只有详情页要用，
+    # 单独生成 data-detail.js，别让首页为它们等上几秒。
     order = ['id', 'title', 'author', 'cover', 'tags', 'region', 'audience', 'rating',
-             'status', 'chapter', 'chapterNo', 'total', 'heat', 'updated', 'desc',
-             'hasChs', 'pending', 'readUrl', 'detailUrl', 'srcId', 'chs']
+             'status', 'chapter', 'chapterNo', 'total', 'heat', 'updated',
+             'hasChs', 'pending', 'readUrl', 'detailUrl', 'srcId']
     clean = [{k: x.get(k) for k in order} for x in items]
 
     body = json.dumps(clean, ensure_ascii=False, indent=1)
-    head = ('/* 漫画数据源：由 tools/build_data.py 从 data/guazi_comics.json 生成，'
+    head = ('/* 漫画索引：由 tools/build_data.py 从 data/guazi_comics.json 生成，'
             '请勿手工编辑。\n'
-            '   每条包含：作者 / 题材 / 地区-受众 / 评分 / 最新章节 / 热度 / 简介 / '
-            '原站章节链接（chs）。\n'
+            '   每条包含：作者 / 题材 / 地区-受众 / 评分 / 最新章节 / 热度 / 原站地址。\n'
+            '   简介与章节目录在 data-detail.js（仅详情页加载）。\n'
             '   共计 %d 部作品。 */\n' % len(clean))
     js = head + 'window.COMICS = ' + body + ';\n'
     io.open(OUT, 'w', encoding='utf-8').write(js)
+
+    # 详情包：按 id 索引，只装 desc 与 chs，空条目直接跳过
+    detail = {}
+    for x in items:
+        entry = {}
+        if x.get('desc'):
+            entry['desc'] = x['desc']
+        if x.get('chs'):
+            entry['chs'] = x['chs']
+        if entry:
+            detail[str(x['id'])] = entry
+    dbody = json.dumps(detail, ensure_ascii=False, separators=(',', ':'))
+    dhead = ('/* 详情补充数据：简介 + 章节目录，由 tools/build_data.py 生成。\n'
+             '   只有作品详情页会加载它，列表页不要引。 */\n')
+    io.open(OUT_DETAIL, 'w', encoding='utf-8').write(dhead + 'window.COMIC_DETAIL = ' + dbody + ';\n')
 
     regions = {}
     for x in items:
@@ -78,7 +96,9 @@ def main():
                                  sorted(regions.items(), key=lambda kv: -kv[1])))
     print('评分覆盖 %d 部，简介覆盖 %d 部' % (
         sum(1 for x in items if x['rating']), sum(1 for x in items if x['desc'])))
-    print('输出 -> %s (%.0f KB)' % (os.path.relpath(OUT, ROOT), os.path.getsize(OUT) / 1024))
+    print('输出 -> %s (%.0f KB) + %s (%.0f KB)' % (
+        os.path.relpath(OUT, ROOT), os.path.getsize(OUT) / 1024,
+        os.path.relpath(OUT_DETAIL, ROOT), os.path.getsize(OUT_DETAIL) / 1024))
 
 
 if __name__ == '__main__':

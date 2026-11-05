@@ -281,9 +281,13 @@
     img.onerror = function () { /* 保持 CSS 静态背景 */ };
     img.src = bgSrc.url;
 
-    /** 头发遮罩：与底图同名的灰度图（xxx.webp → xxx-hair.webp），缺图则不平移 */
+    /** 头发遮罩：与底图同名的灰度图（xxx.webp → xxx-hair.webp），缺图则不平移。
+     *  底图按屏宽分档后叫 lliij-2-1400.webp，遮罩只有一份（lliij-2-hair.webp）：
+     *  遮罩按归一化 UV 采样，分辨率和底图不必一致，先剥掉 -1400 这类宽度后缀再拼。 */
     function loadMask() {
-      var src = bgSrc.url.replace(/\.(webp|jpe?g|png)$/i, '-hair.webp');
+      var src = bgSrc.url
+        .replace(/-\d+(\.(webp|jpe?g|png))$/i, '$1')
+        .replace(/\.(webp|jpe?g|png)$/i, '-hair.webp');
       if (src === bgSrc.url) return;
       var m = new Image();
       m.decoding = 'async';

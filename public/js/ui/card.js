@@ -19,6 +19,9 @@
   /** 图片兜底：外链失效或加载失败时切到占位图，避免破版 */
   var IMG_FALLBACK = 'onerror="this.onerror=null;this.src=\'imgs/placeholder.svg\'"';
 
+  /** 1x1 透明占位（定义在 core.js，全站共用） */
+  var BLANK = YY.blank;
+
   /** 卡片上的进度只保留「第 N 话」，长标题会撑破一行 */
   function chapterLabel(item) {
     if (item.chapterNo > 0) return '更新至第' + item.chapterNo + '话';
@@ -44,8 +47,9 @@
       '<div class="card-cover">' +
         '<a class="card-link" href="index02.html?id=' + item.id + '" ' +
           'aria-label="查看《' + esc(item.title) + '》">' +
-          '<img src="' + item.cover + '" alt="《' + esc(item.title) + '》封面" ' +
-            'loading="lazy" referrerpolicy="no-referrer" ' + IMG_FALLBACK + '>' +
+          '<img src="' + BLANK + '" data-src="' + item.cover + '" ' +
+            'alt="《' + esc(item.title) + '》封面" decoding="async" ' +
+            'referrerpolicy="no-referrer" ' + IMG_FALLBACK + '>' +
         '</a>' +
         '<div class="card-badges">' +
           // 地区缺失（源站未标注）时不渲染空角标
@@ -108,6 +112,7 @@
     }
     host.innerHTML = items.map(card).join('');
     reveal(host);
+    lazyCovers(host);
   }
 
   /**
@@ -145,8 +150,8 @@
       var rating = Number(x.rating) || 0;
       return '<a class="rank-item" href="index02.html?id=' + x.id + '" title="' + esc(x.title) + '">' +
         '<span class="rank-no">' + String(i + 1).padStart(2, '0') + '</span>' +
-        '<img class="rank-thumb" src="' + x.cover + '" alt="" loading="lazy" ' +
-          'referrerpolicy="no-referrer" ' + IMG_FALLBACK + '>' +
+        '<img class="rank-thumb" src="' + BLANK + '" data-src="' + x.cover + '" alt="" ' +
+          'decoding="async" referrerpolicy="no-referrer" ' + IMG_FALLBACK + '>' +
         '<span class="rank-info"><b>' + esc(x.title) + '</b><span>' +
           esc(x.chapter || '连载中') +
           (rating > 0 ? ' · ' + rating.toFixed(1) + ' 分' : '') +
@@ -155,6 +160,7 @@
         '<span class="rank-heat">' + YY.fmtHeat(x.heat) + '</span>' +
       '</a>';
     }).join('');
+    lazyCovers(host);
   }
 
   /** 追漫按钮：事件委托，卡片动态增删都无需重新绑定 */
@@ -168,6 +174,43 @@
       btn.setAttribute('aria-pressed', String(active));
       btn.innerHTML = active ? icons.heartSolid : icons.heart;
     });
+  }
+
+  /* ---------------------------- 封面懒加载 ---------------------------- */
+  var imgIO = null;
+
+  /**
+   * 封面延迟取图：滚到距视口 400px 以内才把 data-src 写回 src。
+   *
+   * 原生 loading="lazy" 在 Chrome 的预取距离约 1250px，而首页 20 张卡片
+   * 整片都落在该范围内，等于没做懒加载——首屏只露出十来张，却要下满 20 张。
+   * 这里把阈值收到 400px，首屏只下载真正会看到的那些。
+   * 不支持 IntersectionObserver 时一次性全部取图，内容照常可见。
+   */
+  function lazyCovers(root) {
+    var nodes = $$('img[data-src]', root || document);
+    if (!nodes.length) return;
+    if (!('IntersectionObserver' in window)) {
+      nodes.forEach(function (n) {
+        n.src = n.getAttribute('data-src');
+        n.removeAttribute('data-src');
+      });
+      return;
+    }
+    if (!imgIO) {
+      imgIO = new IntersectionObserver(function (entries) {
+        entries.forEach(function (en) {
+          if (!en.isIntersecting) return;
+          var img = en.target;
+          imgIO.unobserve(img);
+          var url = img.getAttribute('data-src');
+          if (!url) return;
+          img.removeAttribute('data-src');
+          img.src = url;      // 先摘 data-src 再赋值，避免重复触发
+        });
+      }, { rootMargin: '400px 0px' });
+    }
+    nodes.forEach(function (n) { imgIO.observe(n); });
   }
 
   /* ------------------------------ 滚动进场 ------------------------------ */
@@ -199,6 +242,6 @@
 
   YY.card = {
     render: card, grid: grid, cols: cols, watchCols: watchCols,
-    rank: rank, bindFav: bindFav, reveal: reveal
+    rank: rank, bindFav: bindFav, reveal: reveal, lazyCovers: lazyCovers
   };
 })(window.YY);

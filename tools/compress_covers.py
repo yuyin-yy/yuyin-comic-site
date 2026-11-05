@@ -17,7 +17,10 @@ from PIL import Image
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 COVER_DIR = os.path.join(ROOT, 'public', 'imgs', 'covers2')
 MAX_W = 320
-QUALITY = 82
+# q82 → q72：320px 缩略图上肉眼无差，单张从 ~31KB 降到 ~24KB。
+# 首屏一屏十来张，省下的两三百 KB 在慢链路上就是好几秒。
+# 注意：本脚本是就地重压，重复跑会二次压缩累积损失，换图后再跑一次即可。
+QUALITY = 72
 
 
 def main():

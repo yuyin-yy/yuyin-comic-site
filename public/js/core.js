@@ -16,6 +16,12 @@ window.YY = (function () {
   var API_BASE = 'http://localhost:3000'; // 后端地址，部署同域时可改为 ''
 
   var data = window.COMICS || [];
+  // 简介与章节目录单独打包（data-detail.js），只有详情页会引：
+  // 列表页拿到的 YY.data 里没有 desc / chs，别在别处读这两个字段。
+  var detailMap = window.COMIC_DETAIL || {};
+
+  /** 1x1 透明 GIF：懒加载图片先占位，有 src 才不会渲染 alt 文字与破图图标 */
+  var BLANK = 'data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7';
 
   /* ------------------------------ DOM ------------------------------ */
   /** 查询单个元素 */
@@ -39,6 +45,11 @@ window.YY = (function () {
       if (String(data[i].id) === String(id)) return data[i];
     }
     return null;
+  }
+
+  /** 取详情补充数据 { desc, chs }；没引 data-detail.js 的页面返回 null */
+  function detailOf(id) {
+    return detailMap[String(id)] || null;
   }
 
   /** 读取地址栏参数，如 ?id=12 */
@@ -178,9 +189,10 @@ window.YY = (function () {
 
   return {
     data: data,
+    blank: BLANK,
     api: API_BASE,
     $: $, $$: $$, esc: esc,
-    byId: byId, param: param, daysAgo: daysAgo, chapterNo: chapterNo, tagStats: tagStats,
+    byId: byId, detailOf: detailOf, param: param, daysAgo: daysAgo, chapterNo: chapterNo, tagStats: tagStats,
     fmtHeat: fmtHeat,
     favs: favs,
     user: user,

@@ -30,6 +30,15 @@
     var item = YY.byId(id) || YY.data[0];
     if (!item) return;
 
+    // 简介与章节目录在 data-detail.js 里（占三成多，只有本页需要）。
+    // 合并回 item 上，下面所有读 item.desc / item.chs 的地方都不用改；
+    // 万一这个文件没加载，desc 走兜底文案、章节走「内容待补全」，不会报错。
+    var extra = YY.detailOf(item.id);
+    if (extra) {
+      item.desc = extra.desc || '';
+      item.chs = extra.chs || [];
+    }
+
     document.title = item.title + ' · 余音的小破站';
     if (item.desc) {
       var meta = document.querySelector('meta[name="description"]');

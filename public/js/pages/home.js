@@ -94,6 +94,7 @@
     // 横竖屏切换会改变列数：条目数与末行零头都要重算
     YY.card.watchCols(function () {
       paint(groups[activeGroup]());
+      paintLatest();
     });
 
     /* ------------------------- 侧栏 ------------------------- */
@@ -107,7 +108,19 @@
     }).join('');
 
     /* ------------------------- 底部网格 ------------------------- */
-    YY.card.grid($('#homeLatest'), data.slice().sort(byFresh).slice(0, 10));
+    // 手机端 css 把这块整块隐藏了，但 display:none 并不会阻止图片下载，
+    // 照旧渲染等于白白多下 10 张封面。窄屏干脆不渲染，放大窗口时再补。
+    var latestHost = $('#homeLatest');
+    function paintLatest() {
+      if (!latestHost) return;
+      if (YY.card.cols() <= 3) {
+        latestHost.innerHTML = '';
+        return;
+      }
+      if (latestHost.childElementCount) return;
+      YY.card.grid(latestHost, data.slice().sort(byFresh).slice(0, 10));
+    }
+    paintLatest();
 
     /* ------------------------- Hero 搜索 ------------------------- */
     var input = $('#heroSearch');
