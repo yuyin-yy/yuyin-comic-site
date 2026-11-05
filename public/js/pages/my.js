@@ -2,7 +2,7 @@
  * pages/my.js · 我的追漫
  * --------------------------------------------------------------------------
  * 追漫清单存在浏览器本地（localStorage），按加入顺序展示；
- * 登录后显示用户名与默认头像（imgs/offen/blblfmj.png），并可退出登录。
+ * 登录后显示用户名与默认头像（imgs/offen/blblfmj.webp），并可退出登录。
  * 空状态给出引导，底部补一组「你可能还想看」。
  *
  * 依赖：YY、YY.card
@@ -14,7 +14,7 @@
   var $ = YY.$, esc = YY.esc;
 
   // 登录后的默认头像，换图只改这一处
-  var DEFAULT_AVATAR = 'imgs/offen/blblfmj.png';
+  var DEFAULT_AVATAR = 'imgs/offen/blblfmj.webp';
 
   function init() {
     /* ------------------------- 顶部账号区 ------------------------- */

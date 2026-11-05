@@ -24,7 +24,7 @@
         '<div class="footer-grid">' +
           '<div class="footer-about">' +
             '<div class="footer-brand">' +
-              '<img src="imgs/offen/miku.jpg" alt="站点头像">' +
+              '<img src="imgs/offen/miku.webp" alt="站点头像">' +
               '<span>余音的小破站</span>' +
             '</div>' +
             '<p>个人维护的漫画索引：整理国漫、日漫与韩漫的连载进度、评分与简介，' +

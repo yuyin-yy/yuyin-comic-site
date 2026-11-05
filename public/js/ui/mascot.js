@@ -61,7 +61,7 @@
     box.id = 'mascot';
     box.innerHTML =
       '<button class="mascot-btn" id="mascotBtn" type="button" aria-label="和站娘聊聊">' +
-        '<img src="imgs/offen/webtitle.png" alt="站娘">' +
+        '<img src="imgs/offen/webtitle.webp" alt="站娘">' +
       '</button>' +
       '<div class="mascot-bubble" id="mascotBubble" role="status" aria-live="polite">' +
         '<span id="mascotText"></span>' +

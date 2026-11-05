@@ -99,7 +99,7 @@
       '<div class="container">' +
         '<nav class="nav" aria-label="主导航">' +
           '<a class="brand" href="index.html">' +
-            '<img class="brand-mark" src="imgs/offen/miku.jpg" alt="" width="36" height="36">' +
+            '<img class="brand-mark" src="imgs/offen/miku.webp" alt="" width="36" height="36">' +
             '<span class="brand-text">余音的小破站</span>' +
           '</a>' +
           '<div class="nav-links">' + navLinks + '</div>' +
@@ -113,9 +113,9 @@
               icons.dice + '</a>' +
             '<a class="btn btn-sm ' + (user ? 'btn-ghost' : 'btn-dark') + '" ' +
               'href="' + (user ? 'my.html' : 'Login.html') + '">' +
-              // 登录后统一用默认头像（imgs/offen/blblfmj.png），未登录仍是人形图标
+              // 登录后统一用默认头像（imgs/offen/blblfmj.webp），未登录仍是人形图标
               (user
-                ? '<img class="nav-avatar" src="imgs/offen/blblfmj.png" alt="" width="22" height="22">'
+                ? '<img class="nav-avatar" src="imgs/offen/blblfmj.webp" alt="" width="22" height="22">'
                 : icons.user) +
               '<span>' + (user ? esc(user) : '登录') + '</span>' +
             '</a>' +
