@@ -25,3 +25,6 @@ Thumbs.db
 # WorkBuddy 本机发布状态（换机器不该带过去）
 .workbuddy/applications.yaml
 .*.genie
+
+# 本机工具脚本（含本机路径，不入库）
+数据库隧道.vbs
