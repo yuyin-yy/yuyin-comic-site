@@ -105,8 +105,11 @@
         .then(function (data) {
           if (!data.token) throw new Error(data.message || '登录失败');
           YY.user.save(data.token);
-          YY.toast('登录成功，正在跳转');
-          setTimeout(function () { location.href = 'my.html'; }, 600);
+          // 先把本地匿名清单并入账号（内部已兜底，失败也不挡登录）
+          YY.favs.onLogin().then(function () {
+            YY.toast('登录成功，正在跳转');
+            setTimeout(function () { location.href = 'my.html'; }, 400);
+          });
         })
         .catch(function (err) {
           setErr('#loginPassword', friendly(err));

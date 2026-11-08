@@ -60,6 +60,15 @@ const pool = mysql.createPool({
 /* ---------------- 中间件 ---------------- */
 app.disable('x-powered-by');
 
+// 基础安全响应头（不引依赖；不设 CSP，页面有内联样式/脚本会被误伤）
+app.use((_req, res, next) => {
+  res.setHeader('X-Content-Type-Options', 'nosniff');
+  res.setHeader('X-Frame-Options', 'SAMEORIGIN');
+  res.setHeader('Referrer-Policy', 'strict-origin-when-cross-origin');
+  res.setHeader('Permissions-Policy', 'geolocation=(), microphone=(), camera=()');
+  next();
+});
+
 // 只允许本站与本地调试来源，同时兼容直接打开 file:// 的场景
 const ALLOW_ORIGINS = (process.env.CORS_ORIGIN || '')
   .split(',')
@@ -108,8 +117,40 @@ function bad(res, code, message) {
   return res.status(code).json({ success: false, message });
 }
 
+/* ---------------- 简易限流（内存版，单进程够用） ----------------
+ * 目的：挡住针对 /api/login、/api/register 的暴力撞库与垃圾注册。
+ * 说明：
+ *  - 用 req.socket.remoteAddress 而不是 X-Forwarded-For，避免伪造请求头绕过；
+ *    以后若在前面加反代，需要改为读取受信任的代理头。
+ *  - 固定窗口计数，每分钟清理一次过期记录，Map 不会无限增长。
+ */
+const RATE = new Map();
+
+function rateLimit(bucket, limit, windowMs) {
+  return (req, res, next) => {
+    const ip = req.socket.remoteAddress || 'unknown';
+    const key = bucket + '|' + ip;
+    const now = Date.now();
+    let rec = RATE.get(key);
+    if (!rec || rec.resetAt <= now) rec = { count: 0, resetAt: now + windowMs };
+    rec.count += 1;
+    RATE.set(key, rec);
+    if (rec.count > limit) {
+      res.setHeader('Retry-After', String(Math.ceil((rec.resetAt - now) / 1000)));
+      return bad(res, 429, '请求过于频繁，请稍后再试');
+    }
+    return next();
+  };
+}
+
+setInterval(() => {
+  const now = Date.now();
+  for (const [k, v] of RATE) if (v.resetAt <= now) RATE.delete(k);
+}, 60 * 1000).unref();
+
 /* ---------------- 注册 ---------------- */
-app.post('/api/register', async (req, res, next) => {
+// 每 IP 每分钟最多 10 次，防批量注册
+app.post('/api/register', rateLimit('register', 10, 60 * 1000), async (req, res, next) => {
   const username = String((req.body && req.body.username) || '').trim();
   const password = String((req.body && req.body.password) || '');
 
@@ -138,7 +179,8 @@ app.post('/api/register', async (req, res, next) => {
 });
 
 /* ---------------- 登录 ---------------- */
-app.post('/api/login', async (req, res, next) => {
+// 每 IP 每分钟最多 10 次，防撞库
+app.post('/api/login', rateLimit('login', 10, 60 * 1000), async (req, res, next) => {
   const username = String((req.body && req.body.username) || '').trim();
   const password = String((req.body && req.body.password) || '');
 
@@ -149,10 +191,10 @@ app.post('/api/login', async (req, res, next) => {
       'SELECT id, username, password FROM users WHERE username = ? LIMIT 1',
       [username]
     );
-    if (!rows.length) return bad(res, 401, '用户不存在');
+    if (!rows.length) return bad(res, 401, '用户名或密码错误');
 
     const valid = await bcrypt.compare(password, rows[0].password);
-    if (!valid) return bad(res, 401, '密码错误');
+    if (!valid) return bad(res, 401, '用户名或密码错误');
 
     const token = jwt.sign(
       { id: rows[0].id, username: rows[0].username },
@@ -191,6 +233,62 @@ app.get('/api/me', auth, (req, res) => {
 // 兼容旧版前端调用的受保护路由
 app.get('/api/protected', auth, (req, res) => {
   res.json({ success: true, message: '您已成功访问受保护的资源', user: req.user.username });
+});
+
+/* ---------------- 追漫清单（账号级收藏） ---------------- */
+// 单次请求最多同步的条目数，防止刷接口
+const FAV_LIMIT = 2000;
+
+/** 清洗 id 数组：只保留 1-32 位的字母数字下划线连字符 */
+function normIds(v) {
+  if (!Array.isArray(v)) return [];
+  return v
+    .map((x) => String(x).trim())
+    .filter((x) => /^[A-Za-z0-9_-]{1,32}$/.test(x))
+    .slice(0, FAV_LIMIT);
+}
+
+async function listFavs(userId) {
+  const [rows] = await pool.execute(
+    'SELECT comic_id FROM favorites WHERE user_id = ? ORDER BY created_at DESC',
+    [userId]
+  );
+  return rows.map((r) => r.comic_id);
+}
+
+app.get('/api/favs', rateLimit('favs', 120, 60 * 1000), auth, async (req, res, next) => {
+  try {
+    res.json({ success: true, list: await listFavs(req.user.id) });
+  } catch (err) {
+    next(err);
+  }
+});
+
+app.post('/api/favs/sync', rateLimit('favs', 120, 60 * 1000), auth, async (req, res, next) => {
+  const add = normIds(req.body && req.body.add);
+  const remove = normIds(req.body && req.body.remove);
+
+  try {
+    if (add.length) {
+      const values = add.map(() => '(?, ?)').join(',');
+      const params = [];
+      add.forEach((id) => params.push(req.user.id, id));
+      await pool.query(
+        'INSERT IGNORE INTO favorites (user_id, comic_id) VALUES ' + values,
+        params
+      );
+    }
+    if (remove.length) {
+      const marks = remove.map(() => '?').join(',');
+      await pool.query(
+        'DELETE FROM favorites WHERE user_id = ? AND comic_id IN (' + marks + ')',
+        [req.user.id].concat(remove)
+      );
+    }
+    res.json({ success: true, list: await listFavs(req.user.id) });
+  } catch (err) {
+    next(err);
+  }
 });
 
 app.get('/api/health', async (_req, res) => {

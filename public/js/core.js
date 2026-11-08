@@ -13,7 +13,11 @@ window.YY = (function () {
   /* ------------------------------ 常量 ------------------------------ */
   var FAV_KEY = 'yy-favs';       // 追漫清单（localStorage，存作品 id 数组）
   var TOKEN_KEY = 'yy-token';    // 登录令牌（JWT，仅存前端用于展示用户名）
-  var API_BASE = 'http://localhost:3000'; // 后端地址，部署同域时可改为 ''
+  // 后端地址：本地开发（file:// 或 localhost）连 http://localhost:3000，
+  // 部署到服务器后自动走同源 /api/*（否则会把请求发到访客自己的电脑上）。
+  var API_BASE = /^(localhost|127\.0\.0\.1|)$/.test(location.hostname)
+    ? 'http://localhost:3000'
+    : '';
 
   var data = window.COMICS || [];
   // 简介与章节目录单独打包（data-detail.js），只有详情页会引：
@@ -97,20 +101,68 @@ window.YY = (function () {
   }
 
   /* ------------------------------ 收藏 ------------------------------ */
+  // 未登录：清单存 localStorage（FAV_KEY），行为和以前一致。
+  // 登录后：以服务器 favorites 表为准，本地只留一份镜像（FAV_CACHE_KEY）
+  // 供首屏渲染，避免爱心图标闪烁或误显示。
+  var FAV_CACHE_KEY = 'yy-favs-cache';
+
+  function readJSON(key) {
+    try {
+      var raw = JSON.parse(localStorage.getItem(key) || '[]');
+      return Array.isArray(raw) ? raw.map(String) : [];
+    } catch (e) { return []; }
+  }
+
+  /** 带 token 的接口请求（收藏同步专用） */
+  function favRequest(method, path, body) {
+    var headers = { 'Content-Type': 'application/json' };
+    var t = localStorage.getItem(TOKEN_KEY);
+    if (t) headers.Authorization = 'Bearer ' + t;
+    return fetch(API_BASE + path, {
+      method: method,
+      headers: headers,
+      body: body ? JSON.stringify(body) : undefined
+    }).then(function (res) {
+      return res.json().catch(function () { return {}; }).then(function (data) {
+        if (!res.ok || data.success === false) throw new Error(data.message || '请求失败');
+        return data;
+      });
+    });
+  }
+
   var favs = {
+    ready: false,   // 登录态下，服务器清单是否已拉到
+    server: [],     // 登录态下的服务器清单（内存）
+
     /** 读取追漫 id 列表 */
     list: function () {
-      try {
-        var raw = JSON.parse(localStorage.getItem(FAV_KEY) || '[]');
-        return Array.isArray(raw) ? raw.map(String) : [];
-      } catch (e) { return []; }
+      if (localStorage.getItem(TOKEN_KEY)) {
+        return favs.ready ? favs.server.slice() : readJSON(FAV_CACHE_KEY);
+      }
+      return readJSON(FAV_KEY);
     },
+
     has: function (id) { return favs.list().indexOf(String(id)) > -1; },
+
+    /** 整体写入清单：未登录写本地；已登录算差异后同步服务器 */
     save: function (list) {
-      localStorage.setItem(FAV_KEY, JSON.stringify(list));
-      // 通知其他页面区块刷新（如「我的追漫」列表）
-      document.dispatchEvent(new CustomEvent('yy:favs', { detail: list }));
+      if (!localStorage.getItem(TOKEN_KEY)) {
+        localStorage.setItem(FAV_KEY, JSON.stringify(list));
+        favs._emit(list);
+        return;
+      }
+      var next = list.map(String);
+      var prev = favs.list();
+      var add = next.filter(function (x) { return prev.indexOf(x) === -1; });
+      var del = prev.filter(function (x) { return next.indexOf(x) === -1; });
+
+      favs.server = next;
+      favs.ready = true;
+      localStorage.setItem(FAV_CACHE_KEY, JSON.stringify(next));
+      favs._emit(next);
+      favs._sync(add, del);
     },
+
     /** 收藏/取消收藏，返回操作后是否已收藏 */
     toggle: function (id) {
       var list = favs.list();
@@ -128,6 +180,58 @@ window.YY = (function () {
       toast('已加入追漫' + name);
       favs.save(list);
       return true;
+    },
+
+    _emit: function (list) {
+      // 通知其他页面区块刷新（如「我的追漫」列表）
+      document.dispatchEvent(new CustomEvent('yy:favs', { detail: list }));
+    },
+
+    _apply: function (list) {
+      favs.server = (list || []).map(String);
+      favs.ready = true;
+      localStorage.setItem(FAV_CACHE_KEY, JSON.stringify(favs.server));
+      favs._emit(favs.server);
+    },
+
+    _sync: function (add, del) {
+      if (!add.length && !del.length) return Promise.resolve();
+      return favRequest('POST', '/api/favs/sync', { add: add, remove: del })
+        .then(function (data) { favs._apply(data.list || []); })
+        .catch(function () {
+          toast('清单同步失败，请检查网络');
+          favs.refresh();
+        });
+    },
+
+    /** 从服务器拉取账号清单（页面启动时调用） */
+    refresh: function () {
+      if (!localStorage.getItem(TOKEN_KEY)) return Promise.resolve([]);
+      return favRequest('GET', '/api/favs')
+        .then(function (data) { favs._apply(data.list || []); return favs.server; })
+        .catch(function () { return favs.list(); });
+    },
+
+    /** 登录成功：把本地匿名清单并入账号，随后清空本地，避免污染其他账号 */
+    onLogin: function () {
+      var local = readJSON(FAV_KEY);
+      favs.ready = false;
+      var p = local.length
+        ? favRequest('POST', '/api/favs/sync', { add: local, remove: [] })
+            .then(function (data) {
+              localStorage.removeItem(FAV_KEY);
+              favs._apply(data.list || []);
+            })
+        : favs.refresh();
+      return p.catch(function () { /* 合并失败不挡登录，下次刷新会自动纠正 */ });
+    },
+
+    /** 退出登录：回到本地清单视角 */
+    onLogout: function () {
+      favs.ready = false;
+      favs.server = [];
+      localStorage.removeItem(FAV_CACHE_KEY);
+      favs._emit(readJSON(FAV_KEY));
     }
   };
 
@@ -186,6 +290,9 @@ window.YY = (function () {
     empty: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"><path d="M4 7.5A2.5 2.5 0 0 1 6.5 5h11A2.5 2.5 0 0 1 20 7.5v9a2.5 2.5 0 0 1-2.5 2.5h-11A2.5 2.5 0 0 1 4 16.5v-9z"/><path d="M4 10h16M9 14h6"/></svg>',
     chevron: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg>'
   };
+
+  // 已登录时启动即拉取账号清单（异步，不阻塞首屏；拉到后发 yy:favs 事件刷新）
+  if (user.token()) favs.refresh();
 
   return {
     data: data,

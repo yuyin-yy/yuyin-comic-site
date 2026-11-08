@@ -40,6 +40,7 @@
       loginBtn.parentNode.replaceChild(logout, loginBtn);
       logout.addEventListener('click', function () {
         YY.user.clear();
+        YY.favs.onLogout();
         YY.toast('已退出登录');
         setTimeout(function () { location.href = 'index.html'; }, 500);
       });
