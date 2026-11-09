@@ -1,10 +1,16 @@
 /* ==========================================================================
    responsive.css · 响应式
-   断点约定：1080（平板横）/ 900（平板竖，隐藏导航链接）/ 720（手机）/
-   460（小屏，两列网格）。只覆盖布局尺寸，不重复定义组件外观。
+   断点约定：1140（导航 6 项，先收进抽屉）/ 1080（平板横）/ 900（平板竖）/
+   720（手机）/ 460（小屏，两列网格）。只覆盖布局尺寸，不重复定义组件外观。
    ========================================================================== */
 
 /* ---------- 响应式 ---------- */
+/* 导航加了「罗生门」一共 6 项，1081~1140 之间会挤到搜索框，提前收进抽屉 */
+@media (max-width: 1140px) {
+  .nav-links { display: none; }
+  .nav-toggle { display: grid; }
+}
+
 @media (max-width: 1080px) {
   /* 导航项较多，1080 以下收进抽屉，避免文字换行挤压 */
   .nav-links { display: none; }
@@ -21,6 +27,8 @@
 
   .home-layout { grid-template-columns: minmax(0, 1fr); }
   .detail-grid { grid-template-columns: 170px minmax(0, 1fr); gap: 24px; }
+  /* 银框随封面一起缩，10px 在 170px 的封面上会显得像厚木框 */
+  .detail-cover { --frame: 8px; }
   .detail-stats b { font-size: 17px; }
   .footer-grid { grid-template-columns: 1fr 1fr; }
   .auth-shell { grid-template-columns: 1fr; width: min(520px, 100%); }
@@ -49,10 +57,10 @@
   /* 首屏之后的第一屏内容，上边距从 54 收到 26：
      首屏自身已有暗色收尾，再叠 54px 会形成一条空白带 */
   .home-main { padding-top: 26px; }
-  /* 手机端只保留「人气推荐」：右侧榜单栏与底部「最近更新」整块隐藏，
-     否则一路滑下去要翻过三块内容才到页脚 */
+  /* 手机端只保留「人气推荐」+ 底部封面球：右侧榜单栏整块隐藏，
+     否则一路滑下去要翻过三块内容才到页脚。
+     「最近更新」改成封面球后占地小了，手机上保留（尺寸见 orb.css） */
   .home-aside { display: none; }
-  .home-latest { display: none; }
   /* 排行榜：手机只看榜单主体，评分最高与关于榜单收起（热门题材保留） */
   .rank-side .side-score,
   .rank-side .side-about { display: none; }
@@ -101,6 +109,7 @@
   .toolbar { position: static; padding: 14px 0; }
   .detail-hero { padding: 26px 0 32px; }
   .detail-grid { grid-template-columns: 120px minmax(0, 1fr); gap: 16px; }
+  .detail-cover { --frame: 6px; }
   .detail-info h1 { font-size: 21px; word-break: break-word; }
   .detail-stats {
     display: grid;

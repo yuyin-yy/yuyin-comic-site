@@ -1,0 +1,216 @@
+/* ==========================================================================
+   orb.css · 首页「最近更新」封面球
+   --------------------------------------------------------------------------
+   球体本身由 js/ui/orb.js 计算，这里只管：舞台、卡片外观、标题、提示条。
+   断点跟着页面走：1140 / 1080 / 900 / 720 / 460，尺寸主要由 js 按屏宽算，
+   css 只保留首帧兜底高度，避免脚本还没跑起来时区块塌成 0。
+   ========================================================================== */
+
+.orb {
+  position: relative;
+  height: 720px;
+  margin-top: 4px;
+  overflow: hidden;
+  perspective: 600px;
+  perspective-origin: 50% 50%;
+  cursor: grab;
+  touch-action: pan-y;
+  transition: height 0.7s var(--ease);
+  /* 球体背后的暖光，平铺时淡出 */
+  --orb-shadow: 0 22px 46px -24px rgba(20, 22, 28, 0.42);
+}
+
+.orb.is-drag { cursor: grabbing; }
+.orb.is-grid { cursor: default; }
+.orb.is-grid .orb-card { cursor: pointer; }
+
+/* 球体区域的暖底光：给「悬在纸面上」一点体积感 */
+.orb-glow {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: min(76%, 700px);
+  aspect-ratio: 1;
+  transform: translate(-50%, -50%);
+  background:
+    /* 球底下的一点落地阴影，让球「坐在」纸面上而不是飘着 */
+    radial-gradient(ellipse 58% 9% at 50% 93%, rgba(20, 22, 28, 0.16), rgba(20, 22, 28, 0) 70%),
+    radial-gradient(circle at 50% 48%, rgba(229, 50, 63, 0.07), rgba(229, 50, 63, 0) 58%),
+    radial-gradient(circle at 50% 46%, rgba(217, 164, 65, 0.055), rgba(217, 164, 65, 0) 66%);
+  pointer-events: none;
+  transition: opacity 0.6s var(--ease);
+}
+
+.orb.is-grid .orb-glow { opacity: 0; }
+
+/* 3D 世界原点：由 js 设 top 到球心 */
+.orb-world {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 0;
+  height: 0;
+  transform-style: preserve-3d;
+}
+
+/* ---------- 单张封面 ---------- */
+.orb-card {
+  position: absolute;
+  display: block;
+  border-radius: 12px;
+  transform-style: flat;
+  opacity: 0;
+  outline-offset: 4px;
+  -webkit-user-drag: none;
+  will-change: transform;
+  transition: opacity 0.55s var(--ease);
+}
+
+.orb.is-live .orb-card { opacity: 1; }
+
+/* 平铺时多出来的封面（超过 4 行）原地淡出 */
+.orb .orb-card.is-out {
+  opacity: 0;
+  pointer-events: none;
+  transition-duration: 0.3s;
+}
+
+.orb-shot {
+  position: relative;
+  display: block;
+  width: 100%;
+  height: 100%;
+  border-radius: inherit;
+  overflow: hidden;
+  background: linear-gradient(160deg, #e9e6e0, #f6f4f0);
+  /* 球体上不加阴影：20 多张卡片的投影会互相盖住，球糊成一团；
+     纵深交给 orb-veil 的明暗。阴影只在平铺时出现（见 is-grid） */
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.3);
+  transition: transform 0.32s var(--ease), box-shadow 0.32s var(--ease);
+}
+
+.orb-shot img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  pointer-events: none;
+  user-select: none;
+}
+
+/* 纵深阴影：光从正面来，越靠球背面越暗（js 按 z 逐帧写 opacity） */
+.orb-veil {
+  position: absolute;
+  inset: 0;
+  background: #0c0e14;
+  pointer-events: none;
+  /* 每帧都在改 opacity：单独提一层，走合成器，别让卡片里的图片跟着重绘 */
+  will-change: opacity;
+}
+
+/* 悬停：只在平铺时抬起。球体状态下鼠标划过是「转球」，
+   一路扫过几十张卡，每张都起一次 0.32s 过渡，又卡又乱 */
+.orb.is-grid .orb-shot { box-shadow: var(--orb-shadow); }
+
+.orb.is-grid .orb-card:hover .orb-shot {
+  transform: scale(1.045);
+  box-shadow: 0 30px 58px -26px rgba(20, 22, 28, 0.52);
+}
+
+.orb-card:focus-visible .orb-shot {
+  box-shadow: 0 0 0 2px var(--paper), 0 0 0 4px var(--accent);
+}
+
+/* ---------- 标题（只在平铺后出现） ---------- */
+.orb-cap {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 100%;
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 0.5em;
+  padding-top: 0.5em;
+  font-size: 12.5px;
+  line-height: 1.35;
+  white-space: nowrap;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.3s var(--ease);
+}
+
+.orb-cap b {
+  min-width: 0;
+  overflow: hidden;
+  font-weight: 650;
+  color: var(--ink);
+  text-overflow: ellipsis;
+}
+
+.orb-cap em {
+  flex: 0 0 auto;
+  font-size: 0.88em;
+  font-style: normal;
+  color: var(--muted);
+}
+
+/* ---------- 操作提示 ---------- */
+.orb-hint {
+  position: absolute;
+  right: 24px;
+  bottom: 16px;
+  padding: 6px 14px;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.72);
+  color: var(--muted);
+  font-size: 12.5px;
+  letter-spacing: 0.02em;
+  white-space: nowrap;
+  pointer-events: none;
+  transition: opacity 0.5s var(--ease);
+}
+
+.orb-hint.is-off,
+.orb.is-grid .orb-hint { opacity: 0; }
+
+/* ---------- 区块标题右侧：球体 / 网格 + 查看全部 ---------- */
+.section-tools {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.orb-switch button { padding: 7px 15px; font-size: 13px; }
+
+/* ---------- 断点 ---------- */
+@media (max-width: 1080px) {
+  .orb { height: 620px; }
+}
+
+@media (max-width: 900px) {
+  .orb { height: 540px; }
+  .orb-hint { right: 0; bottom: 8px; }
+}
+
+@media (max-width: 720px) {
+  .orb { height: 460px; }
+  .orb-glow { width: min(92%, 460px); }
+  .orb-hint { display: none; }
+  .section-tools { gap: 10px; }
+  .orb-switch button { padding: 6px 12px; font-size: 12.5px; }
+}
+
+@media (max-width: 460px) {
+  .orb { height: 400px; }
+  .orb-switch { display: none; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .orb,
+  .orb-card,
+  .orb-shot,
+  .orb-hint,
+  .orb-glow { transition: none; }
+  .orb-card { opacity: 1; }
+}

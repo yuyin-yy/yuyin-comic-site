@@ -4,7 +4,7 @@
  * 1. Hero 区搜索与统计数字
  * 2. 「人气推荐」网格 + 综合/国漫/日漫/恋爱 四个切换
  * 3. 侧栏：今日排行榜、最近更新
- * 4. 底部「最近更新」大网格
+ * 4. 底部「最近更新」封面球（拖动旋转 / 滚轮摊平成网格）
  *
  * 依赖：YY、YY.card、YY.nav
  * 暴露：YY.pages.home.init()
@@ -94,7 +94,7 @@
     // 横竖屏切换会改变列数：条目数与末行零头都要重算
     YY.card.watchCols(function () {
       paint(groups[activeGroup]());
-      paintLatest();
+      if (orb) orb.relayout();
     });
 
     /* ------------------------- 侧栏 ------------------------- */
@@ -107,20 +107,27 @@
         '<span class="u-time">' + YY.daysAgo(x.updated) + '</span></a>';
     }).join('');
 
-    /* ------------------------- 底部网格 ------------------------- */
-    // 手机端 css 把这块整块隐藏了，但 display:none 并不会阻止图片下载，
-    // 照旧渲染等于白白多下 10 张封面。窄屏干脆不渲染，放大窗口时再补。
+    /* ------------------------- 底部封面球 ------------------------- */
+    // 最近更新 40 部：默认是一颗可拖动的球，滚轮或右侧分段按钮摊平成网格。
+    // 封面带 loading="lazy"，滚到附近才取图；这里只管数据、列数与按钮联动。
     var latestHost = $('#homeLatest');
-    function paintLatest() {
-      if (!latestHost) return;
-      if (YY.card.cols() <= 3) {
-        latestHost.innerHTML = '';
-        return;
-      }
-      if (latestHost.childElementCount) return;
-      YY.card.grid(latestHost, data.slice().sort(byFresh).slice(0, 10));
+    var orb = null;
+    if (latestHost && YY.orb) {
+      orb = YY.orb.create(latestHost, {
+        items: data.slice().sort(byFresh).slice(0, 40),
+        cols: YY.card.cols,
+        onMode: function (mode) {
+          YY.$$('#orbSwitch button').forEach(function (b) {
+            b.setAttribute('aria-selected', String(b.getAttribute('data-mode') === mode));
+          });
+        }
+      });
+      YY.$$('#orbSwitch button').forEach(function (b) {
+        b.addEventListener('click', function () {
+          if (orb) orb.setMode(b.getAttribute('data-mode'));
+        });
+      });
     }
-    paintLatest();
 
     /* ------------------------- Hero 搜索 ------------------------- */
     var input = $('#heroSearch');
