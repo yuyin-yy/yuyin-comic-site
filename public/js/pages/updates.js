@@ -1,8 +1,9 @@
 /* ==========================================================================
  * pages/updates.js · 最近更新
  * --------------------------------------------------------------------------
- * 1. 轮播：取最近更新的 5 部，每 3 秒自动切换；悬停暂停、箭头/圆点/左右键可切，
- *    底部有一条与计时同步的进度条，右侧是整幅封面（带缓慢推镜）。
+ * 1. 轮播：站内插画（imgs/banner/art-01…08），满幅铺底，4.5 秒自动切换；
+ *    悬停暂停、箭头/圆点/左右键可切，底部有一条与计时同步的进度条。
+ *    除第一张外都先只带 data-src，轮到它前面一张时才真正下载。
  * 2. 本周热门：按热度取前 3。
  * 3. 更新流：**近一个季度**用完整列表（按天分组），**更早**的折成一行五列的卡片墙，
  *    这样长列表不会一直拉下去，老作品也能带图露出。
@@ -16,8 +17,16 @@
   var $ = YY.$, esc = YY.esc, icons = YY.icons;
   var IMG_FALLBACK = 'onerror="this.onerror=null;this.src=\'imgs/placeholder.svg\'"';
 
-  var AUTOPLAY = 3000;   // 自动轮播间隔（毫秒），进度条同步这个时长
+  var AUTOPLAY = 4500;   // 自动轮播间隔（毫秒），进度条同步这个时长
   var QUARTER = 90;      // 「近一个季度」的天数，超出后改用卡片墙
+
+  // 轮播插画：public/imgs/banner/art-01…0N，每张两档（1600 / 900）。
+  // 换图只要按同样命名丢进去，再改这里的张数。
+  var ART_N = 8;
+  function artSrc(i, small) {
+    var n = i + 1 < 10 ? '0' + (i + 1) : String(i + 1);
+    return 'imgs/banner/art-' + n + (small ? '-sm' : '') + '.webp';
+  }
 
   /** 卡片墙每次加载多少部：列数 × 4 行。
       按列数算而不是写死 20，手机端 3/2 列时才不会每次都在末行留半行空位；桌面仍是 20。 */
@@ -60,46 +69,29 @@
     });
 
     /* ------------------------- 轮播 ------------------------- */
-    var slides = byFresh.slice(0, 5);
     var slideHost = $('#carSlides');
+    var count = ART_N;
 
-    slideHost.innerHTML = slides.map(function (x, i) {
-      return '<div class="car-slide' + (i === 0 ? ' on' : '') + '">' +
-        // 底图只做氛围（CSS 里压暗 + 模糊），右侧是整幅封面
-        '<div class="art" style="background-image:url(\'' + x.cover + '\')"></div>' +
-        '<a class="car-art" href="index02.html?id=' + x.id + '" tabindex="-1" aria-hidden="true">' +
-          '<img src="' + x.cover + '" alt="《' + esc(x.title) + '》封面" ' +
-            'referrerpolicy="no-referrer" ' + IMG_FALLBACK + '>' +
-        '</a>' +
-        '<div class="car-info">' +
-          '<span class="car-kicker"><i></i>最近更新 · TOP ' + (i + 1) + '</span>' +
-          '<h2><a href="index02.html?id=' + x.id + '">' + esc(x.title) + '</a></h2>' +
-          '<p class="ch">最新 <b>' + esc(x.chapter || '连载中') + '</b> · ' +
-            esc(YY.daysAgo(x.updated) || x.updated || '') + '更新</p>' +
-          (x.desc ? '<p class="cdesc">' + esc(x.desc) + '</p>' : '') +
-          '<div class="ctags">' + (x.tags || []).slice(0, 3).map(function (t) {
-            return '<span>' + esc(t) + '</span>';
-          }).join('') + '</div>' +
-          '<div class="car-acts">' +
-            (x.readUrl
-              ? '<a class="car-btn primary" href="' + esc(x.readUrl) + '" target="_blank" ' +
-                'rel="noopener noreferrer">' + icons.play + '<span>阅读最新</span></a>'
-              : '') +
-            '<a class="car-btn" href="index02.html?id=' + x.id + '">查看详情</a>' +
-          '</div>' +
-          '<div class="car-meta">' +
-            '<div><span>作者</span><b>' + esc(x.author || '原站未标注') + '</b></div>' +
-            '<div><span>热度</span><b class="hot">' + YY.fmtHeat(x.heat) + '</b></div>' +
-          '</div>' +
-        '</div>' +
+    slideHost.innerHTML = new Array(count).fill(0).map(function (_, i) {
+      var big = artSrc(i), small = artSrc(i, true);
+      // 第一张直接给 src（首屏必须立刻有画面），其余等轮到再换上去
+      var attr = i === 0
+        ? ' src="' + big + '" srcset="' + small + ' 900w, ' + big + ' 1600w"'
+        : ' data-src="' + big + '" data-srcset="' + small + ' 900w, ' + big + ' 1600w"';
+      return '<div class="car-slide' + (i === 0 ? ' on' : '') + '" role="group" ' +
+          'aria-roledescription="slide" aria-label="第 ' + (i + 1) + ' 张，共 ' + count + ' 张">' +
+        '<img class="car-img" alt="站内插画 ' + (i + 1) + '" ' +
+          'sizes="(max-width: 1080px) 96vw, 900px"' +
+          ' decoding="async" ' + (i === 0 ? 'fetchpriority="high"' : '') + attr + '>' +
+        '<span class="car-cap"><i></i>插画选<em>ILLUSTRATION</em></span>' +
       '</div>';
     }).join('');
 
     var dots = $('#carDots');
-    dots.innerHTML = slides.map(function (x, i) {
+    dots.innerHTML = new Array(count).fill(0).map(function (_, i) {
       return '<button type="button" role="tab" data-i="' + i + '" aria-current="' +
-        (i === 0) + '" aria-label="第 ' + (i + 1) + ' 张：' + esc(x.title) + '"></button>';
-    }).join('') + '<span class="car-idx" id="carIdx">01 / ' + pad(slides.length) + '</span>';
+        (i === 0) + '" aria-label="第 ' + (i + 1) + ' 张插画"></button>';
+    }).join('') + '<span class="car-idx" id="carIdx">01 / ' + pad(count) + '</span>';
 
     var nodes = YY.$$('.car-slide', slideHost);
     var idxEl = $('#carIdx');
@@ -129,13 +121,28 @@
       prog.style.width = w + '%';
     }
 
+    /** 提前把下一张的地址挂上去。除首图外都先是 data-src，
+        轮播到它之前的那一张时才真正开始下载，首屏不用等 1.5MB 的图。 */
+    function warm(i) {
+      var n = nodes[(i + nodes.length) % nodes.length];
+      var img = n && n.querySelector('img');
+      if (!img || !img.getAttribute('data-src')) return;
+      img.src = img.getAttribute('data-src');
+      img.srcset = img.getAttribute('data-srcset');
+      img.removeAttribute('data-src');
+      img.removeAttribute('data-srcset');
+    }
+
     function go(i) {
       cur = (i + nodes.length) % nodes.length;
+      // 点圆点可能一下跳很远，目标这张也可能还没下载过
+      warm(cur);
       nodes.forEach(function (n, idx) { n.classList.toggle('on', idx === cur); });
       YY.$$('button', dots).forEach(function (d, idx) {
         d.setAttribute('aria-current', String(idx === cur));
       });
       if (idxEl) idxEl.textContent = pad(cur + 1) + ' / ' + pad(nodes.length);
+      warm(cur + 1);
     }
 
     function play() {
@@ -162,6 +169,24 @@
     var box = $('#carousel');
     box.addEventListener('mouseenter', stop);
     box.addEventListener('mouseleave', play);
+
+    // 触屏左右划动切换：手机上圆点小，滑动才是本能
+    var tStartX = 0, tStartY = 0;
+    box.addEventListener('touchstart', function (e) {
+      var t = e.touches[0];
+      tStartX = t.clientX;
+      tStartY = t.clientY;
+    }, { passive: true });
+    box.addEventListener('touchend', function (e) {
+      var t = e.changedTouches[0];
+      var dx = t.clientX - tStartX;
+      var dy = t.clientY - tStartY;
+      // 横向位移够大、且明显比纵向大，才算划动，避免和页面滚动打架
+      if (Math.abs(dx) < 44 || Math.abs(dx) < Math.abs(dy)) return;
+      go(cur + (dx < 0 ? 1 : -1));
+      play();
+    }, { passive: true });
+
     // 页签不可见时停掉定时器，省电也避免回来时跳帧
     document.addEventListener('visibilitychange', function () {
       if (document.hidden) stop(); else play();
@@ -173,6 +198,7 @@
     });
 
     if (nodes.length > 1) play();
+    warm(1);
 
     /* ------------------------- 本周热门 ------------------------- */
     $('#weekList').innerHTML = YY.data.slice(0, 3).map(function (x, i) {

@@ -476,12 +476,23 @@
 .mascot-btn:hover { transform: translateY(-6px) rotate(2deg); }
 .mascot-btn:active { transform: scale(0.94); }
 .mascot-btn.bounce { animation: mascotBounce 0.5s var(--ease); }
+.mascot-btn.wiggle { animation: mascotWiggle 0.62s var(--ease); }
 
 @keyframes mascotBounce {
   0% { transform: scale(1); }
   35% { transform: scale(1.08, 0.92) translateY(4px); }
   65% { transform: scale(0.96, 1.05) translateY(-8px); }
   100% { transform: scale(1); }
+}
+
+/* 双击 / 连点九次：左右晃两下，比 bounce 更像「被戳烦了」 */
+@keyframes mascotWiggle {
+  0% { transform: rotate(0); }
+  18% { transform: rotate(-7deg) scale(1.03); }
+  42% { transform: rotate(6deg); }
+  64% { transform: rotate(-3.5deg); }
+  82% { transform: rotate(1.5deg); }
+  100% { transform: rotate(0); }
 }
 
 /* 对话气泡：位于角色右侧，尾巴朝左 */

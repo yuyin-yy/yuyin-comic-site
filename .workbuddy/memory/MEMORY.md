@@ -50,20 +50,24 @@ public/
 ### 光尘层 gate-fx.js（Canvas 2D，桌面 532 / 手机 300 颗）
 `<canvas class="gate-fx">` 放在 `.gate-world` 里门之后（跟推镜一起缩放），
 `pointer-events:none`。`GateFx.setDoor(门矩形)` / `GateFx.burst()` 由 `gate.js` 调，
-另有 `GateFx.debug(k)` 吐某层每颗坐标用于核对。九类粒子：
+另有 `GateFx.debug(k)` 吐某层每颗坐标用于核对。十类粒子：
 1 天空浮尘 / 2 水面碎光 / 3 门缝光尘 / 4 大虚焦光斑 / 5 水面波纹 / 6 门框柔光 /
-7 水面波光带 / 8 天空流雾 / 9 绕门丝带。
-- **必须分两遍画**：柔光（4/5/6/7/8）用 `lighter`，实点（1/2/3/9）用 `source-over`。
+7 水面波光带 / 8 天空流雾 / 9 上浮水汽带 / 10 零散水汽游丝。
+- **必须分两遍画**：柔光（4/5/6/7/8）用 `lighter`，实点（1/2/3/9/10）用 `source-over`。
   全用加光时金色会被顶成纯白，白点落在白门板/浅蓝天上等于隐形。
-- 贴图三套：`dot`（实心核大，小点用）/ `halo`（柔，大光斑用）/
-  `orb`（亮核 + 淡暗边 0.34，环绕珠用）。64px 渐变缩到 2px 会稀释 alpha。
-- **环绕丝带**：一条 22 颗共享角度和呼吸相位（各闪会把弧切碎），外圈 7 条均匀铺开、
-  rad 收拢在 0.9~1.04（散开就露缺口），内流 3 条从 rad 0.3 螺旋吸入。
-  轨道横向 1 门宽、纵向 0.72 门高 —— 门瘦长，纵向半径小于半门高就全压在门板上。
-  珠子要「间距 < 可见直径（约 0.6 倍设定值）」才连成弧；桌面 11~15px、手机 6.5~9px。
+- 贴图三套：`dot`（实心核大，小点用）/ `halo`（柔，大光斑用）/ `streak`（64×256 纵向羽化光条）。
+  64px 渐变缩到 2px 会稀释 alpha；**拉伸的圆形贴图会变成雨滴或探照灯**，水汽必须用 streak。
+- **上浮水汽**（2026-11-09 取代原来的「绕门金色珠链」，那套 `ORBIT_SEG` / `addOrbit` 已删）：
+  一侧两条带子，每条 18 颗共享同一条路径状态和摆动相位；间距 `VAPOR_DU=0.042`，
+  珠子必须彼此重叠才连成流。起点 `door.y + door.h*0.62`（门脚水面），
+  终点 `door.y - door.h*0.36`；横向 `off + 0.52*cu` 越往上越往外张。
+  珠子 9~15px 宽 × 34~78px 高，alpha 0.14~0.26。桌面 2 条/侧，手机 1 条/侧。
 - 速度单位是 **px/秒**，写每帧 0.05px 等于每秒 3px（看着像没动）。
   另有全局气流 `skyWind()` / `waterFlow()` 给所有粒子共享，整片空气才「在动」。
-- 水面高度按门反推（`door.y - door.h*0.05`），不要写 `H*0.4`：cover 裁切时比例会变。
+- 水面高度按门反推：`door.y + door.h*0.654`（门顶 0.365 / 门底 0.778 / 建筑下沿 0.635）。
+  早期写的 `door.y - door.h*0.05` 在门顶之上，水面粒子会撒到天空和屋顶。
+- **新粒子一定要带 `sw/swp`**：`Math.sin(time*undefined)` 得 NaN，`drawImage` 静默不画。
+  `draw()` 里已写成 `p.sw ? ... : 0`。
 - 手机 `lite = 掉帧 || W <= 720`；掉帧兜底：头 45 帧平均 >26ms 降 DPR 到 1 并减粒子。
   `prefers-reduced-motion` 下 CSS `display:none` + 脚本不启动。
 - **`sizeCanvas` 不能只信 `canvas.clientWidth`**：CSS 未生效时它返回内在宽度 300
@@ -71,7 +75,34 @@ public/
   小于视口九成一律不认。`setDoor` 可能比本文件先跑（`window.GateFx` 还没定义），
   所以要有 `hasDoorParts` 补建 + dispatch resize 兜底。
 
+### 会飘的背景 gate-flow.js（2026-11-09）
+WebGL 单 quad，重画同一张 `.gate-art`，只做 UV 位移，不引 three.js。
+天空区按 `smoothstep(0.30,0.52,lum)` **只推亮的部分**（云），深色木框不动；
+水面区 `smoothstep(0.61,0.73,y)` + 两层高频波纹。DPR 上限 1.5，`document.hidden` 暂停，
+`webglcontextlost` 摘 `.is-on` 退回静态图；`?fx=0` / 减少动效 / 无 WebGL 直接不启动。
+验收用帧间差分：天空 5.41 / 水面 9.61 / 建筑 0.28，深色结构 IoU 0.729（偏移 0,0）。
 
+## 最近更新轮播（2026-11-09 改版）
+- 8 张站内插画在 `public/imgs/banner/art-01…08.webp`，每张两档（1600 / 900，q82）。
+  换图按同样命名丢进去，只改 `js/pages/updates.js` 顶部的 `ART_N`。
+- 首屏只加载第一张（129KB）；其余是 `data-src`，`warm(i)` 在轮到前一张时才挂 `src/srcset`。
+  **`go()` 里必须同时 `warm(cur)`** —— 点圆点往回跳时目标从没下载过，会黑一整块。
+- 满幅 `object-fit: cover`，左下角只有「● 插画选 ILLUSTRATION」，右上角圆点 + `01 / 08`。
+  旧的 `.car-info / .car-art / .car-kicker / .car-btn / .car-meta` 整段已删，别再往回调。
+- 箭头默认 `opacity:0`，靠 `.car-arrow::before { inset:-240px -64px }` 把整条边缘做成热区
+  （超出部分被 `overflow:hidden` 裁掉）；`@media (hover:none)` 常驻，另补了触屏左右划动。
+- 倾斜复用 `ui/tilt.js`（已改成 `TARGETS` 数组，按 `data-page` 匹配）：
+  轮播 `ry 5 / rx 3.4 / persp 1600 / lift 6`。角度再大右边缘会压到「本周热门」，
+  18px 的栅格间距只够约 19px 位移。
+- 自动播放 4.5s，推镜 12s；≤900 用 16:9，≤720 用 4:3。
+
+## 站娘（js/ui/mascot.js，2026-11-09）
+- 台词分池：`LINES`（45 条通用）+ `GREETS`（四时段各 4 条）+
+  `DOUBLE / HOVER / IDLE / BACK / TOP / BOTTOM / LATENIGHT` 七个场景池。
+- 连击用 `burst` 计数（间隔 <380ms 才算同一串）：2 = 双击台词、5 = 老彩蛋、
+  6~8 只晃不说话、≥9 = 收尾。**别再用「数组到 5 就清空」的写法**，那样 9 次分支永远到不了。
+- 自发台词统一走 `quip(pool, gap)`：有人正在说话、或距上次开口不到 gap 就放弃。
+- 另加：悬停 1.2s 开口（40s 一次）、90s 无操作、切回标签页、从很下面滚回顶部、点气泡收起。
 
 ## 模块约定
 - 依赖方向：`pages/* → ui/* → core.js`，反向不引用；跨模块只通过 `window.YY`。

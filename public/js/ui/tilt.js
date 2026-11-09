@@ -1,5 +1,5 @@
 /* ==========================================================================
- * ui/tilt.js · 详情页主封面：3D 倾斜 + 跟随光泽
+ * ui/tilt.js · 3D 倾斜 + 跟随光泽（详情页主封面 / 最近更新轮播）
  * --------------------------------------------------------------------------
  * 参考 foreverblog 首页卡片的悬停（home.js 的 bindCardGlare）：
  *   指针在卡片内的相对位置决定整张卡的姿态——
@@ -14,6 +14,11 @@
  *   - 多一个 translateZ 抬起（perspective 下约放大 1.8%），鼠标进入时卡片
  *     朝观者浮起一点，离开再落回去。
  *
+ * 两个目标（见 TARGETS）：
+ *   详情页主封面  全身角度，银框 + 内阴影都在页面样式里；
+ *   最近更新轮播  角度收得很小（±2.5°），因为它是满幅大块，
+ *                 转多了会压到右边的「本周热门」，近处那点位移只当呼吸。
+ *
  * 只在 `(hover: hover)`、非触屏、未开启「减少动效」时启用。
  * 触屏与键盘用户拿到的是静态封面，银框照常显示。
  *
@@ -23,14 +28,15 @@
 (function (YY) {
   'use strict';
 
-  var SCOPE = 'body[data-page="detail"]';   // 只服务详情页
-  var TARGET = '.detail-cover';             // 主封面（不是底部的相关推荐）
-  // 这张图 262×349，比参考站的卡片还大一圈，角度反而要收着给，
-  // 不然四角会甩出背景、盖到右边的文字上
-  var MAX_RY = 14;     // rotateY 总量（度）
-  var MAX_RX = 11;     // rotateX 总量（度）
-  var PERSP = 900;     // 透视距离，和参考站一致
-  var LIFT = 18;       // 悬停时朝观者抬起（px）
+  var TARGETS = [
+    // 这张图 262×349，比参考站的卡片还大一圈，角度反而要收着给，
+    // 不然四角会甩出背景、盖到右边的文字上
+    { page: 'detail', sel: '.detail-cover', ry: 14, rx: 11, persp: 900, lift: 18 },
+    // 轮播是 1000px 级别的整块，边缘位移 = 宽度/2 × sin(角度)，
+    // ±2.5° 差不多 22px，正好用阴影吃掉，不会真的贴到隔壁卡片
+    { page: 'updates', sel: '#carousel', ry: 5, rx: 3.4, persp: 1600, lift: 6 }
+  ];
+
   var EASE = 0.12;     // 每帧逼近比例（60fps 下约 0.4s 追平）
 
   function clamp01(v) { return v < 0 ? 0 : v > 1 ? 1 : v; }
@@ -50,7 +56,7 @@
     };
   }
 
-  function attach(el) {
+  function attach(el, cfg) {
     var cur = { rx: 0, ry: 0, z: 0 };
     var tgt = { rx: 0, ry: 0, z: 0 };
     var raf = 0;
@@ -58,7 +64,7 @@
     function apply() {
       var moving = Math.abs(cur.rx) > 0.01 || Math.abs(cur.ry) > 0.01 || cur.z > 0.1;
       el.style.transform = moving
-        ? 'perspective(' + PERSP + 'px) translate3d(0,0,' + cur.z.toFixed(1) + 'px) ' +
+        ? 'perspective(' + cfg.persp + 'px) translate3d(0,0,' + cur.z.toFixed(1) + 'px) ' +
           'rotateX(' + cur.rx.toFixed(2) + 'deg) rotateY(' + cur.ry.toFixed(2) + 'deg)'
         : '';
       el.classList.toggle('is-tilt', moving);
@@ -87,7 +93,7 @@
 
     el.addEventListener('pointerenter', function (e) {
       if (e.pointerType !== 'mouse') return;
-      tgt.z = LIFT;
+      tgt.z = cfg.lift;
       run();
     });
 
@@ -97,9 +103,9 @@
       if (!r.width || !r.height) return;
       var x = clamp01((e.clientX - r.left) / r.width);
       var y = clamp01((e.clientY - r.top) / r.height);
-      tgt.ry = (x - 0.5) * MAX_RY;
-      tgt.rx = -(y - 0.5) * MAX_RX;
-      tgt.z = LIFT;
+      tgt.ry = (x - 0.5) * cfg.ry;
+      tgt.rx = -(y - 0.5) * cfg.rx;
+      tgt.z = cfg.lift;
       // 光斑中心跟着指针走（css 里按这个坐标铺径向渐变）
       el.style.setProperty('--gx', (x * 100).toFixed(1) + '%');
       el.style.setProperty('--gy', (y * 100).toFixed(1) + '%');
@@ -118,13 +124,16 @@
 
   function bind() {
     if (!window.matchMedia) return;
-    if (!document.body || !document.body.matches(SCOPE)) return;
+    if (!document.body) return;
     if (!window.matchMedia('(hover: hover)').matches) return;
     if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
 
-    var el = document.querySelector(TARGET);
-    if (!el || el.__tiltOn) return;
-    attach(el);
+    TARGETS.forEach(function (cfg) {
+      if (!document.body.matches('body[data-page="' + cfg.page + '"]')) return;
+      var el = document.querySelector(cfg.sel);
+      if (!el || el.__tiltOn) return;
+      attach(el, cfg);
+    });
   }
 
   if (document.readyState === 'loading') {

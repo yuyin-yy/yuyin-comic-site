@@ -58,9 +58,27 @@ body[data-page="gate"] {
 
 .gate.is-ready .gate-art { opacity: 1; }
 
+/* ---------- 活背景：云与水面流动（gate-flow.js） ----------
+   盖在静态底图之上、门之下。贴图上传完才淡入，所以慢网或 WebGL 不可用时
+   看到的就是下面那张静态图，不会白屏。 */
+.gate-flow {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  display: block;
+  width: 100%;
+  height: 100%;
+  opacity: 0;
+  transition: opacity 0.6s var(--ease) 0.15s;
+  pointer-events: none;
+}
+
+.gate-flow.is-on { opacity: 1; }
+
 /* ---------- 门 ---------- */
 .gate-door {
   position: absolute;
+  z-index: 2;
   opacity: 0;
   transition: opacity 0.45s var(--ease);
 }

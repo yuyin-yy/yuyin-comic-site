@@ -5,10 +5,11 @@
 
      · 空气 —— 几颗极淡的大虚焦光斑，缓慢漂移，做出景深；
      · 天空 —— 缓慢上浮的浮尘 + 几团横着飘的雾气，整片天在流动；
-     · 门   —— 绕着门盘旋、被门缝吸进去的螺旋光尘（最抢眼的一层）
-               + 门缝里向上冒的暖光 + 镶在门框上的柔光；
+     · 门   —— 左右两侧从水面升起的水汽（最抢眼的一层）：
+               贴着门框往上走、越往上越往外散，像被门里的光吸上去；
+               + 门缝里向上冒的光 + 镶在门框上的柔光；
      · 水面 —— 横向拉长的碎光、几道极扁的波纹线、几片大范围的波光带；
-               门正下方偏暖偏亮，因为那里是门光在水里的倒影。
+               门正下方偏亮，因为那里是门光在水里的倒影。
 
    五条踩过的经验：
      1. 全是 1~3px 的小点根本看不见 —— 亮背景上白色小点没有对比度。
@@ -22,8 +23,9 @@
      4. **不能整层都用 `lighter`**：加光混合会把金色顶成纯白，白点落在白门板、
         浅蓝天空上就等于隐形（画了一万多个不透明像素，屏幕上什么都没有）。
         现在分两遍画 —— 柔光用 lighter，实点用 source-over，各保住自己的颜色。
-     5. 这颗插画偏暖（米黄、砖红），纯金点叠上去是同一个色系，看着像脏点。
-        绕门的光珠所以用 'orb'：亮核外面裹一圈淡暗边，浅底深底都能压出轮廓。
+     5. 水汽不是「点」而是「缕」：单颗要用细长的竖条（h 远大于 w），
+        十几颗沿同一条弧线错开上升，连起来才读成一股往上的流。
+        原来的绕门金色丝带已经撤掉 —— 那一圈黄珠太抢，盖住了水面的走向。
 
    为什么用 Canvas 2D 而不是 WebGL：粒子总数五百多，而且全是把同一张预渲染
    好的贴图缩放贴上去，2D 足够用；省掉一整套着色器，手机上也更稳。
@@ -121,15 +123,52 @@
     return c;
   }
 
+  /** 竖条贴图（64×256）：水汽珠子专用。
+   *  不用「圆点拉伸」—— 径向渐变拉长后中间亮、两头尖，缩到 10px 宽会读成
+   *  一串叶片/虚线。这里改画「上下柔化的竖条」：纵向有一段真正不透明的主体，
+   *  珠子上下交叠时才连成连续的一缕。 */
+  function makeStreak(rgb) {
+    var W2 = 64, H2 = 256;
+    var c = document.createElement('canvas');
+    c.width = W2; c.height = H2;
+    var g = c.getContext('2d');
+
+    g.fillStyle = 'rgba(' + rgb + ', 1)';
+    g.fillRect(0, 0, W2, H2);
+
+    // 先做横向柔边（左右淡出）
+    g.globalCompositeOperation = 'destination-in';
+    var gx = g.createLinearGradient(0, 0, W2, 0);
+    gx.addColorStop(0, 'rgba(0,0,0,0)');
+    gx.addColorStop(0.18, 'rgba(0,0,0,0.42)');
+    gx.addColorStop(0.5, 'rgba(0,0,0,1)');
+    gx.addColorStop(0.82, 'rgba(0,0,0,0.42)');
+    gx.addColorStop(1, 'rgba(0,0,0,0)');
+    g.fillStyle = gx;
+    g.fillRect(0, 0, W2, H2);
+
+    // 再做纵向：中间 72% 保持不透明，两头各留一段淡出
+    var gy = g.createLinearGradient(0, 0, 0, H2);
+    gy.addColorStop(0, 'rgba(0,0,0,0)');
+    gy.addColorStop(0.16, 'rgba(0,0,0,1)');
+    gy.addColorStop(0.84, 'rgba(0,0,0,1)');
+    gy.addColorStop(1, 'rgba(0,0,0,0)');
+    g.fillStyle = gy;
+    g.fillRect(0, 0, W2, H2);
+
+    return c;
+  }
+
   function buildSprites() {
     sprites = {
       cool: makeSprite('158, 205, 255', 'dot'),    // 天空/水面：偏冷的天光
       soft: makeSprite('226, 240, 255', 'dot'),    // 更白一点的浮尘
-      warm: makeSprite('255, 214, 140', 'dot'),    // 门缝里的暖光
-      gold: makeSprite('255, 186, 74', 'orb'),     // 绕门的光环：带暗边，浅底深底都压得住
-      goldPale: makeSprite('255, 224, 158', 'orb'),  // 光环里的浅色珠，跟主金拉开层次
+      // 门缝的光是暖白，不是金黄：原来 255,214,140 落在浅色插画上像脏黄点
+      warm: makeSprite('255, 236, 206', 'dot'),
       haloWarm: makeSprite('255, 238, 200', 'halo'),
-      haloSoft: makeSprite('214, 232, 255', 'halo')
+      haloSoft: makeSprite('214, 232, 255', 'halo'),
+      vapor: makeStreak('236, 246, 255'),
+      vaporCool: makeStreak('206, 228, 255')
     };
   }
 
@@ -139,11 +178,12 @@
    *     5 水面波纹 / 6 门周围的大柔光 / 7 水面大波光带
    *     8 天空流雾 / 9 绕门盘旋的螺旋光尘 */
 
-  /** 水面在视口里的高度。原图上水面比门顶还高一点点，
-   *  所以从门的矩形反推最稳 —— 用固定的 H*0.4 在超宽屏上会跑偏，
-   *  因为 cover 会把画面上下裁掉一条。 */
+  /** 水面在视口里的高度。
+   *  原图 1440×900 上量的：门顶 0.365、门底 0.778、建筑下沿 ≈0.635，
+   *  所以水面线在门高的 0.654 处。以前写成 door.y - 0.05h（门顶上方），
+   *  水面粒子会撒到建筑和天空上，看着像灰尘；水汽也从半空开始，像下雨。 */
   function waterTop() {
-    return door ? door.y - door.h * 0.05 : H * 0.4;
+    return door ? door.y + door.h * 0.654 : H * 0.64;
   }
 
   function addBokeh(n) {
@@ -163,7 +203,7 @@
         vx: rnd(-5, 5),
         vy: rnd(-4, 1.5),
         pull: rnd(0.02, 0.06),
-        sp: Math.random() < 0.4 ? sprites.haloWarm : sprites.haloSoft
+        sp: sprites.haloSoft
       });
     }
   }
@@ -210,8 +250,9 @@
         vx: rnd(-7, 7),
         vy: rnd(-19, -6),         // 上升
         pull: rnd(0.04, 0.14),    // 推门时被吹开的程度
-        // 蓝天是冷色，往里面放暖色的阳光尘才有色差；纯白点在亮天上等于没有
-        sp: Math.random() < 0.3 ? sprites.warm : sprites.soft
+        // 只用冷白：暖黄点落在蓝天/白门上会被读成「脏点」，
+        // 想要的那点阳光感交给门缝与门框的柔光去给
+        sp: Math.random() < 0.35 ? sprites.cool : sprites.soft
       });
     }
   }
@@ -242,7 +283,7 @@
         vx: rnd(-16, 16),
         vy: 0,
         pull: 0,
-        sp: near > 0.5 && Math.random() < 0.6 ? sprites.warm : sprites.cool
+        sp: near > 0.5 ? sprites.soft : sprites.cool
       });
     }
   }
@@ -296,7 +337,7 @@
         vx: rnd(-18, 18),
         vy: 0,
         pull: 0,
-        sp: Math.random() < 0.4 ? sprites.haloWarm : sprites.haloSoft
+        sp: sprites.haloSoft
       });
     }
   }
@@ -359,75 +400,79 @@
     }
   }
 
-  /** 绕门盘旋的光尘 —— 这一层是「活的门」的主角。
+  /** 门两侧升起的水汽 —— 这一层是「门在呼吸」的主角。
    *
-   *  做法不是撒散点，而是「丝带」：一条丝带 = 十几颗珠子沿轨道排开、共享同
-   *  一个角度、共享同一个呼吸相位，头亮尾淡。散点再多看过去也只是雪花，
-   *  只有连成够长的一段弧，才像「有什么正绕着门转」。
-   *  （珠子要是各自闪烁，弧会被切成碎点 —— 相位必须挂在 tape 上。）
+   *  走向按参考图划的两条线来：从门脚的水面起步，贴着门框往上，
+   *  一边升一边向外散，越过门顶之后淡掉。
    *
-   *  丝带分两拨：
-   *   · 外圈 —— rad 常驻 0.86~1.02、几乎不收，负责那一圈明确的光环；
-   *   · 内流 —— rad 从外往里滑，被门缝吸进去，到缝口换个角度重来。
-   *
-   *  椭圆按门矩形给：横向 1 个门宽、纵向 0.72 个门高（≈184 对 ≈268）。
-   *  门本身很瘦长（184×372），纵向半径必须超过半个门高，否则整条轨道都
-   *  压在门板上，看过去只是「门上有几个点」，读不出环。 */
-  var ORBIT_SEG = 22;        // 每条丝带几颗
-  var ORBIT_STEP = 0.038;    // 相邻两颗的角度差（rad，约 2.2°）
-                             // 22 颗 ≈ 48°，七条外圈就盖住 336°，几乎是一整圈。
-                             // 球的有效直径只有设定值的六成，步长必须小到
-                             // 「间隔 < 可见直径」，否则读成虚线
+   *  和绕门光环一样用「丝带」：一条流 = 十几颗珠子沿同一条曲线错开高度，
+   *  共用同一个摆动相位。散点会读成雨丝 / 雪花，只有连成一段连续的 S 形，
+   *  才像一股被吸上去的水汽。
+   */
+  var VAPOR_SEG = 18;        // 每条流几颗
+  var VAPOR_DU = 0.042;      // 相邻两颗在路径上的间距（18 颗盖住 0.76 段路）
 
-  function addOrbit(ring, flow) {
+  function addVapor(ribbons) {
     if (!door) return;
 
-    function tape(outer, ang0) {
+    function tape(side, slot) {
       var t = {
-        ang: ang0,                  // 由外面按角度均匀铺开，不随机
-        // 外圈要「在同一个椭圆上」才连成环：rad 一散开，某几条会缩到门内，
-        // 环上就露出缺口。内流那层才需要拉开距离。
-        rad: outer ? rnd(0.9, 1.04) : rnd(0.3, 0.92),
-        // 角速度 0.28~0.6 rad/s：绕一圈 10~22 秒。丝带是连着的，
-        // 视觉上一直有东西在移动，不需要转得飞快
-        spd: rnd(0.28, 0.6) * (Math.random() < 0.32 ? -1 : 1),
-        // 外圈几乎不收（否则光环会散掉），内流收得快
-        fall: outer ? rnd(0.006, 0.02) : rnd(0.055, 0.14),
-        dy: rnd(-0.34, 0.34),       // 收进门缝时落在缝里的纵向位置
-        wob: rnd(2, 5.5),           // 上下浮动，别像一根画上去的链子
-        wobp: rnd(0.4, 1.1),
-        // 手机屏幕小、轨道周长却没短多少，同一颗珠子会挤在一起连成粗链，
-        // 所以小屏单独用细一号的珠子
-        wid: lite
-          ? (outer ? rnd(6.5, 9) : rnd(5, 7))
-          : (outer ? rnd(11, 15) : rnd(7, 11)),
-        a0: outer ? rnd(0.72, 1) : rnd(0.45, 0.78),
-        ph: Math.random() * 6.283,  // 整条丝带共用一个呼吸相位
-        tw: rnd(0.5, 1.3),
-        warm: Math.random() < 0.7,
-        outer: outer
+        side: side,
+        u: Math.random(),               // 头的位置：0 出水、1 到顶
+        spd: rnd(0.035, 0.075),         // 走完全程约 13~28 秒
+        ph: Math.random() * 6.283,      // 整条流共用一个摆动相位
+        amp: rnd(0.12, 0.22),           // 横向摆幅（门宽的倍数）
+        // 同侧几条按 slot 错开，才会读成两三缕并排的流，而不是一坨雾
+        off: 0.50 + slot * 0.065
       };
-      for (var j = 0; j < ORBIT_SEG; j++) {
+      for (var j = 0; j < VAPOR_SEG; j++) {
+        var w = rnd(9, 15) * (lite ? 0.82 : 1);
         parts.push({
           k: 9,
-          t: t,                     // 同一条丝带共享轨道状态
-          seg: j,                   // 第几颗（0 是头）
-          x: 0, y: 0, w: 0, h: 0,   // 每帧由 ang/rad 算出来
-          // 头亮尾淡，但别淡到看不见 —— 尾巴也是弧的一部分
-          a: t.a0 * (1 - j / ORBIT_SEG * 0.55),
-          ph: t.ph,
-          tw: t.tw,
-          sw: 0, swp: 0, vx: 0, vy: 0, pull: 0,
-          sp: t.warm ? sprites.gold : sprites.goldPale
+          t: t,
+          seg: j,
+          x: 0, y: 0,
+          w: w,
+          // 高度要盖过「珠距」（约 0.042 段路 ≈ 15px）：短了会读成一串珠子
+          h: w * rnd(3.4, 5.2),
+          a: rnd(0.14, 0.26) * (1 - j / VAPOR_SEG * 0.28),
+          jx: rnd(-1, 1) * w * 0.55,     // 每颗左右错开一点，整缕才不呆板
+          fade: 0,
+          sp: Math.random() < 0.28 ? sprites.vaporCool : sprites.vapor
         });
       }
     }
 
-    // 外圈均匀铺开（不然随机一挤就全凑在一侧，另一侧空着，看不出是环）；
-    // 内流也铺开，但错开一个相位，免得和外圈叠在同一条线上
-    for (var i = 0; i < ring; i++) tape(true, i / ring * 6.283 + rnd(-0.3, 0.3));
-    for (var k = 0; k < flow; k++) {
-      tape(false, k / flow * 6.283 + 6.283 / flow / 2 + rnd(-0.4, 0.4));
+    // 左右各一半；两边的相位错开，不会像镜像一样同时摆
+    var per = Math.max(1, Math.round(ribbons / 2));
+    for (var i = 0; i < per; i++) {
+      tape(1, i);
+      tape(-1, i);
+    }
+  }
+
+  /** 水汽的「体」：几团跟着同一条流上升的柔光，负责让流看起来有厚度。
+   *  全是细条会显得像雨丝，加上这层才有蒸腾感。 */
+  function addVaporWisp(n) {
+    if (!door) return;
+    for (var i = 0; i < n; i++) {
+      var w = rnd(30, 62);
+      parts.push({
+        k: 10,
+        side: i % 2 ? 1 : -1,
+        u: Math.random(),
+        spd: rnd(0.035, 0.07),
+        w: w,
+        h: w * rnd(2.6, 4.4),
+        a: rnd(0.05, 0.1),
+        off: rnd(0.55, 0.85),
+        amp: rnd(0.05, 0.1),
+        ph: Math.random() * 6.283,
+        tw: rnd(0.12, 0.32),
+        sw: rnd(2, 6),
+        swp: rnd(0.2, 0.6),
+        sp: sprites.haloSoft
+      });
     }
   }
 
@@ -445,9 +490,9 @@
     addRipple(lite ? 7 : 18);
     addShimmer(lite ? 4 : 9);
     addWater(lite ? 30 : 78);
-    // 参数是「外圈条数, 内流条数」，每条 12 颗、约 49° 长：
-    // 桌面 6 + 3 = 108 颗，外圈盖住 294°，看过去就是一道断续但均匀的光环
-    addOrbit(lite ? 6 : 7, lite ? 3 : 3);
+    // 门两侧的水汽：桌面每边 2 缕（4 × 18 颗），手机每边 2 缕
+    addVapor(4);
+    addVaporWisp(lite ? 8 : 18);
     addGate(lite ? 16 : 44);
     addGlow(lite ? 4 : 6);
   }
@@ -494,7 +539,7 @@
   /** 这一颗是「大而淡的柔光」还是「小而实的点」
    *  柔光：大虚焦光斑、门框暖光、水面波光带、天空流雾、水面波纹 */
   function isSoft(k) {
-    return k === 4 || k === 5 || k === 6 || k === 7 || k === 8;
+    return k === 4 || k === 5 || k === 6 || k === 7 || k === 8 || k === 10;
   }
 
   function step(dt) {
@@ -508,31 +553,41 @@
     for (var i = 0; i < parts.length; i++) {
       var p = parts[i];
 
-      /* 绕门的丝带：轨道状态挂在共用的 tape 上，只有头（seg 0）推进它 */
-      if (p.k === 9) {
-        var t = p.t;
+      /* 门两侧的水汽：整条流由头推进，珠子按 seg 错开高度。
+         位置每帧由 u 现算，所以换窗口比例、换手机，水汽始终贴着这扇门。 */
+      if (p.k === 9 || p.k === 10) {
+        var cu, vside, voff, vph, vamp;
 
-        if (p.seg === 0) {
-          t.ang += t.spd * dt;
-          t.rad -= t.fall * dt;
-          // 推门时被门里的光顶出去，散开再重新吸回来
-          if (burst > 0) t.rad += burst * dt * 2.4;
-          if (t.rad <= 0.03 || t.rad > 1.32) {
-            // 外圈丝带收完了就回到外圈，内流的从最外圈重新开始
-            t.rad = t.outer ? rnd(0.9, 1.02) : 1.02;
-            t.ang = Math.random() * 6.283;
-            t.dy = rnd(-0.34, 0.34);
+        if (p.k === 9) {
+          var vt = p.t;
+          if (p.seg === 0) {
+            vt.u += vt.spd * dt * (1 + burst * 1.6);
+            if (vt.u > 1.14) { vt.u = -0.12; vt.ph = Math.random() * 6.283; }
           }
+          var vu = vt.u - p.seg * VAPOR_DU;
+          cu = vu < 0 ? 0 : vu > 1 ? 1 : vu;
+          vside = vt.side;
+          voff = vt.off + 0.52 * cu;
+          vph = vt.ph;
+          vamp = vt.amp;
+          // 两头淡进淡出：水里冒出来、顶上散掉，都不会凭空出现
+          p.fade = (vu < 0 || vu > 1) ? 0 : Math.sin(Math.PI * vu);
+        } else {
+          p.u += p.spd * dt;
+          if (p.u > 1.05) p.u = -0.05;
+          cu = p.u < 0 ? 0 : p.u > 1 ? 1 : p.u;
+          vside = p.side;
+          voff = p.off + 0.52 * cu;
+          vph = p.ph;
+          vamp = p.amp;
+          p.fade = Math.sin(Math.PI * cu);
         }
 
-        // 尾巴拖在身后：角速度为正就往负方向排，反之亦然
-        var ang = t.ang - p.seg * ORBIT_STEP * (t.spd > 0 ? 1 : -1);
-        // f 不从 0 起：收到最小的时候珠子停在门缝附近，而不是缩成一个点
-        var f = 0.25 + 0.75 * t.rad;
-        p.x = cx + Math.cos(ang) * door.w * 1 * f;
-        p.y = cy + Math.sin(ang) * door.h * 0.72 * f + (1 - f) * door.h * t.dy +
-              Math.sin(time * t.wobp + p.ph) * t.wob;
-        p.w = p.h = t.wid * (1 - p.seg / ORBIT_SEG * 0.34);  // 尾巴略细
+        var vy0 = door.y + door.h * 0.62;        // 出水口：门脚的水面
+        var vy1 = door.y - door.h * 0.36;        // 越过门顶再散掉
+        var vsw = Math.sin(cu * 4.4 + time * 0.42 + vph) * vamp * (0.35 + cu);
+        p.x = cx + vside * door.w * (voff + vsw) + (p.jx || 0);
+        p.y = vy0 + (vy1 - vy0) * cu;
         continue;
       }
 
@@ -591,14 +646,13 @@
 
         if (p.k === 3 && burst > 0) a *= 1 + burst * 1.7;   // 推门那一刻门缝最亮
 
-        if (p.k === 9) {
-          // 外圈淡入：丝带换角度重新开始时不会凭空冒出来
-          a *= clamp((1.24 - p.t.rad) * 4.2, 0, 1) * 1.3;
-        }
+        if (p.k === 9 || p.k === 10) a *= p.fade;
 
         if (a < 0.004) continue;
 
-        var x = p.x + Math.sin(time * p.swp + p.ph) * p.sw;
+        // sw/swp 只有部分层有（水汽的位置已经由路径算好，不需要再摆）；
+        // 缺字段时 Math.sin(undefined) = NaN，x 变 NaN 会让 drawImage 静默跳过
+        var x = p.x + (p.sw ? Math.sin(time * p.swp + p.ph) * p.sw : 0);
         var y = p.y;
         if (p.k === 2 || p.k === 5 || p.k === 7) {
           y += Math.sin(time * p.swp * 1.4 + p.ph * 2) * 3.4;
@@ -734,7 +788,8 @@
         W: W, H: H, door: door, n: parts.length,
         pts: parts.filter(function (p) { return !k || p.k === k; })
           .map(function (p) {
-            return [Math.round(p.x), Math.round(p.y), Math.round(p.w), +(p.a).toFixed(2)];
+            return [Math.round(p.x), Math.round(p.y), Math.round(p.w), +(p.a).toFixed(2),
+                    Math.round(p.h), +(p.fade || 0).toFixed(2)];
           })
       };
     }

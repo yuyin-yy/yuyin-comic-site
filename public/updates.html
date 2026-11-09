@@ -7,7 +7,7 @@
   <!-- 内容是第三方素材索引，不参与搜索引擎收录 -->
   <meta name="robots" content="noindex, nofollow">
   <title>最近更新 · 余音的小破站</title>
-  <meta name="description" content="按更新时间排列的漫画更新流，顶部自动轮播主推作品，每行可直接跳到最新一话。">
+  <meta name="description" content="按更新时间排列的漫画更新流，顶部是站内插画轮播，每行可直接跳到最新一话。">
   <meta name="theme-color" content="#f5f3ef">
   <link rel="stylesheet" href="css/base.css">
   <link rel="stylesheet" href="css/layout.css">
@@ -24,8 +24,9 @@
 
   <main>
     <div class="container upd-top">
-      <!-- 轮播：脚本注入 5 张主推，3 秒自动切换，悬停暂停，底部进度条同步计时 -->
-      <section class="carousel" id="carousel" aria-label="主推作品轮播" aria-roledescription="carousel">
+      <!-- 轮播：站内插画满幅轮播，4.5 秒自动切换，悬停暂停，底部进度条同步计时；
+           左右箭头平时隐藏，指针移到边缘才浮出；整块会跟着鼠标轻微 3D 倾斜 -->
+      <section class="carousel" id="carousel" aria-label="站内插画轮播" aria-roledescription="carousel">
         <div id="carSlides"></div>
         <button class="car-arrow prev" type="button" id="carPrev" aria-label="上一张">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
@@ -73,6 +74,7 @@
   <script src="js/ui/footer.js"></script>
   <script src="js/ui/card.js"></script>
   <script src="js/ui/mascot.js"></script>
+  <script src="js/ui/tilt.js"></script>
   <script src="js/pages/updates.js"></script>
   <script src="js/app.js"></script>
 </body>

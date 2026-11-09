@@ -1,7 +1,7 @@
 /* ==========================================================================
    updates.css · 最近更新
    --------------------------------------------------------------------------
-   上半部分：自动轮播（主推大图 + 右下信息条 + 左右箭头 + 圆点），
+   上半部分：满幅插画轮播（圆点 / 左右箭头 / 底部进度条，整块跟着鼠标轻微倾斜），
    右侧「本周热门」竖排三张；
    下半部分：按日期分组的更新流，每行给出最新话与直达阅读链接。
    ========================================================================== */
@@ -23,8 +23,11 @@
   aspect-ratio: 16 / 8;
   min-height: 340px;
   box-shadow: var(--shadow-md);
+  /* 整块参与 3D 倾斜（ui/tilt.js），转起来时这层保证合成不抖 */
+  will-change: transform;
 }
 
+/* ---------- 满幅插画 ---------- */
 .car-slide {
   position: absolute;
   inset: 0;
@@ -35,79 +38,31 @@
 
 .car-slide.on { opacity: 1; visibility: visible; }
 
-.car-slide .art {
-  position: absolute;
-  inset: -8%;
-  background-size: cover;
-  background-position: center;
-  /* 只做氛围：压暗 + 模糊，真正的画面在右侧整幅封面 */
-  filter: blur(26px) brightness(0.55) saturate(1.1);
-  transform: scale(1.1);
-  opacity: 0.7;
-}
-
-/* 右侧整幅封面：按高度铺满，竖版图不再被压扁成横条 */
-.car-art {
-  position: absolute;
-  top: 0;
-  right: 0;
-  bottom: 0;
-  width: 46%;
-  overflow: hidden;
-}
-
-.car-art img {
+.car-img {
+  display: block;
   width: 100%;
   height: 100%;
   object-fit: cover;
-  object-position: center 18%;
+  object-position: center;
+  transform: scale(1.01);
 }
 
-/* 封面左侧渐隐，和文字区自然衔接 */
-.car-art::after {
-  content: "";
+/* 左下角小标：说明这是插画，不是某一部作品的主推图 */
+.car-cap {
   position: absolute;
-  inset: 0;
-  background: linear-gradient(90deg, #0e1015 0%, rgba(14, 16, 21, 0.6) 24%, rgba(14, 16, 21, 0) 62%);
-}
-
-.car-slide::after {
-  content: "";
-  position: absolute;
-  inset: 0;
-  background:
-    linear-gradient(90deg, rgba(10, 12, 17, 0.78) 0%, rgba(10, 12, 17, 0.34) 46%, rgba(10, 12, 17, 0) 66%),
-    linear-gradient(180deg, rgba(10, 12, 17, 0.12) 0%, rgba(10, 12, 17, 0.28) 55%, rgba(10, 12, 17, 0.62) 100%);
-  pointer-events: none;
-}
-
-/* 文字区固定在左侧，底部对齐 */
-.car-info {
-  position: absolute;
-  left: 0;
-  top: 0;
-  bottom: 0;
+  left: 24px;
+  bottom: 24px;
   z-index: 2;
-  width: 56%;
-  display: flex;
-  flex-direction: column;
-  justify-content: flex-end;
-  padding: 26px 18px 26px 24px;
-  color: #fff;
-}
-
-/* 标题上方的小标：一个呼吸的红点，告诉人这是「正在更新」的内容 */
-.car-kicker {
   display: inline-flex;
   align-items: center;
-  gap: 7px;
-  margin-bottom: 12px;
-  font-size: 11.5px;
-  letter-spacing: 0.14em;
-  color: rgba(255, 255, 255, 0.62);
+  gap: 8px;
+  font-size: 12px;
+  letter-spacing: 0.16em;
+  color: rgba(255, 255, 255, 0.82);
+  text-shadow: 0 1px 14px rgba(0, 0, 0, 0.55);
 }
 
-.car-kicker i {
+.car-cap i {
   width: 6px;
   height: 6px;
   border-radius: 50%;
@@ -116,125 +71,66 @@
   animation: carPulse 2.2s ease-out infinite;
 }
 
+.car-cap em {
+  font-style: normal;
+  font-size: 9.5px;
+  letter-spacing: 0.22em;
+  color: rgba(255, 255, 255, 0.48);
+}
+
+/* 整幅压一层很淡的暗角：顶部的圆点、底部的进度条和左下小标才看得清 */
+.car-slide::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background:
+    linear-gradient(180deg, rgba(10, 12, 17, 0.34) 0%, rgba(10, 12, 17, 0) 22%,
+      rgba(10, 12, 17, 0) 58%, rgba(10, 12, 17, 0.58) 100%),
+    linear-gradient(90deg, rgba(10, 12, 17, 0.42) 0%, rgba(10, 12, 17, 0) 34%);
+  pointer-events: none;
+}
+
+/* 悬停时跟着指针走的一层反光（坐标由 ui/tilt.js 写 --gx / --gy） */
+.carousel::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 3;
+  background: radial-gradient(46% 62% at var(--gx, 50%) var(--gy, 50%),
+    rgba(255, 255, 255, 0.22), rgba(255, 255, 255, 0.06) 45%, transparent 72%);
+  opacity: 0;
+  transition: opacity 0.3s var(--ease);
+  pointer-events: none;
+  mix-blend-mode: screen;
+}
+
+.carousel.is-tilt::before { opacity: 1; }
+
+/* 一圈内描边：亮线压在内侧，等于详情页那圈银框的极简版。
+   真按 10px 做，在 880px 宽的大图上只占 1%，反而像白边瑕疵 */
+.carousel::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 6;
+  border-radius: inherit;
+  box-shadow:
+    inset 0 0 0 1px rgba(255, 255, 255, 0.2),
+    inset 0 1px 0 rgba(255, 255, 255, 0.34);
+  pointer-events: none;
+}
+
 @keyframes carPulse {
   0% { box-shadow: 0 0 0 0 rgba(229, 50, 63, 0.5); }
   70% { box-shadow: 0 0 0 8px rgba(229, 50, 63, 0); }
   100% { box-shadow: 0 0 0 0 rgba(229, 50, 63, 0); }
 }
 
-.car-info h2 {
-  font-size: 27px;
-  font-weight: 800;
-  letter-spacing: -0.025em;
-  line-height: 1.26;
-  text-shadow: 0 2px 18px rgba(0, 0, 0, 0.5);
-}
-
-.car-info h2 a:hover { color: var(--accent); }
-
-.car-info .ch {
-  margin-top: 9px;
-  font-size: 13.5px;
-  color: rgba(255, 255, 255, 0.74);
-}
-
-.car-info .ch b { color: #ff5a66; font-weight: 700; }
-
-.car-info .cdesc {
-  margin-top: 10px;
-  display: -webkit-box;
-  -webkit-line-clamp: 2;
-  -webkit-box-orient: vertical;
-  overflow: hidden;
-  font-size: 12.5px;
-  line-height: 1.75;
-  color: rgba(255, 255, 255, 0.56);
-}
-
-.car-info .ctags {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 6px;
-  margin-top: 11px;
-}
-
-.car-info .ctags span {
-  padding: 3px 9px;
-  border-radius: 4px;
-  background: rgba(255, 255, 255, 0.14);
-  font-size: 11.5px;
-  color: rgba(255, 255, 255, 0.9);
-}
-
-/* 主操作：阅读最新 + 查看详情 */
-.car-acts {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 9px;
-  margin-top: 15px;
-}
-
-.car-btn {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  gap: 6px;
-  height: 38px;
-  padding: 0 19px;
-  border-radius: 999px;
-  border: 1px solid rgba(255, 255, 255, 0.26);
-  font-size: 13.5px;
-  font-weight: 600;
-  color: #fff;
-  transition: background 0.2s var(--ease), border-color 0.2s var(--ease), transform 0.2s var(--ease);
-}
-
-.car-btn svg { width: 14px; height: 14px; }
-
-.car-btn:hover { background: rgba(255, 255, 255, 0.14); border-color: rgba(255, 255, 255, 0.42); }
-
-.car-btn.primary {
-  background: #fff;
-  border-color: #fff;
-  color: var(--ink);
-}
-
-.car-btn.primary:hover { background: rgba(255, 255, 255, 0.86); color: var(--ink); transform: translateY(-1px); }
-
-/* 作者 / 热度：放在文字块底部，不再压住右侧封面 */
-.car-meta {
-  display: flex;
-  gap: 28px;
-  margin-top: 18px;
-  padding-top: 14px;
-  border-top: 1px solid rgba(255, 255, 255, 0.12);
-}
-
-.car-meta div span {
-  display: block;
-  font-size: 11px;
-  color: rgba(255, 255, 255, 0.4);
-  letter-spacing: 0.08em;
-}
-
-.car-meta div b {
-  display: block;
-  margin-top: 3px;
-  max-width: 168px;
-  font-size: 13.5px;
-  font-weight: 650;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
-.car-meta div b.hot { color: #ff5a66; }
-
-/* 左右箭头 */
+/* ---------- 左右箭头（默认藏起来，指针靠近才浮出） ---------- */
 .car-arrow {
   position: absolute;
   top: 50%;
-  z-index: 3;
+  z-index: 4;
   display: grid;
   place-items: center;
   width: 38px;
@@ -242,16 +138,38 @@
   margin-top: -19px;
   border: 0;
   border-radius: 50%;
-  background: rgba(16, 18, 24, 0.4);
+  background: rgba(16, 18, 24, 0.42);
   color: #fff;
   cursor: pointer;
-  opacity: 0.55;
-  transition: opacity 0.2s var(--ease), background 0.2s var(--ease), transform 0.2s var(--ease);
+  opacity: 0;
+  transform: scale(0.9);
+  transition: opacity 0.22s var(--ease), transform 0.22s var(--ease),
+              background 0.2s var(--ease);
   backdrop-filter: blur(4px);
 }
 
-.carousel:hover .car-arrow { opacity: 1; }
-.car-arrow:hover { background: var(--accent); transform: scale(1.06); }
+/* 箭头本体只有 38px，靠这层看不见的「感应区」把整条边缘都变成热区；
+   超出轮播的部分会被 overflow:hidden 裁掉，所以左右各是一条竖带 */
+.car-arrow::before {
+  content: "";
+  position: absolute;
+  inset: -240px -64px;
+}
+
+/* 指针移到左右边缘（也就是这层感应区）时才浮出，平时完全看不见 */
+.car-arrow:hover,
+.car-arrow:focus-visible {
+  opacity: 1;
+  transform: scale(1);
+  background: var(--accent);
+  outline: none;
+}
+
+/* 触屏没有 hover，直接常驻，不然永远点不到 */
+@media (hover: none) {
+  .car-arrow { opacity: 0.72; transform: scale(1); }
+}
+
 .car-arrow.prev { left: 16px; }
 .car-arrow.next { right: 16px; }
 .car-arrow svg { width: 18px; height: 18px; }
@@ -283,7 +201,7 @@
 
 .car-dots button[aria-current="true"] { width: 18px; border-radius: 4px; background: #fff; }
 
-/* 圆点右侧的「01 / 05」 */
+/* 圆点右侧的「01 / 08」 */
 .car-idx {
   margin-left: 4px;
   padding-left: 8px;
@@ -294,15 +212,16 @@
   line-height: 1;
 }
 
-/* 底部进度条：宽度由脚本按 3 秒推进 */
+/* 底部进度条：宽度由脚本按 AUTOPLAY 推进 */
 .car-prog-rail {
   position: absolute;
   left: 0;
   right: 0;
   bottom: 0;
-  z-index: 5;
+  z-index: 7;
   height: 3px;
   background: rgba(255, 255, 255, 0.1);
+  pointer-events: none;
 }
 
 .car-prog {
@@ -312,17 +231,18 @@
   background: linear-gradient(90deg, #ff5a66, var(--accent));
 }
 
-/* 当前这张的封面缓慢推镜，静图也有呼吸感 */
-.car-slide.on .car-art img { animation: carZoom 9s ease-out both; }
+/* 当前这张缓慢推镜，静图也有呼吸感 */
+.car-slide.on .car-img { animation: carZoom 12s ease-out both; }
 
 @keyframes carZoom {
-  from { transform: scale(1); }
+  from { transform: scale(1.01); }
   to { transform: scale(1.07); }
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .car-slide.on .car-art img { animation: none; }
-  .car-kicker i { animation: none; }
+  .car-slide.on .car-img { animation: none; }
+  .car-cap i { animation: none; }
+  .carousel { transition: none; }
 }
 
 /* ---------- 右侧本周热门 ---------- */
@@ -556,14 +476,8 @@
 }
 
 @media (max-width: 900px) {
-  .carousel { aspect-ratio: 16 / 9; min-height: 300px; }
-  .car-art { width: 48%; }
-  .car-info { width: 58%; padding: 18px 14px; }
-  .car-info h2 { font-size: 19px; }
-  .car-info .cdesc { -webkit-line-clamp: 2; }
-  .car-info .ctags { display: none; }
-  .car-meta { margin-top: 12px; padding-top: 10px; gap: 18px; }
-  .car-acts { margin-top: 12px; }
+  .carousel { aspect-ratio: 16 / 9; min-height: 280px; }
+  .car-cap { left: 18px; bottom: 18px; font-size: 11.5px; }
   .car-dots { top: 12px; right: 14px; }
   .week-list { grid-template-columns: 1fr; }
 }
@@ -572,16 +486,13 @@
   .upd-top { padding-top: 16px; }
   /* width:100% 必须有：min-height 与 aspect-ratio 同时存在时，
      浏览器会先按 min-height 反推出宽度（360px 屏上为 353px），把容器撑破 */
-  .carousel { aspect-ratio: 4 / 3.4; min-height: 300px; width: 100%; min-width: 0; }
-  .car-art { width: 50%; }
-  .car-info { width: 56%; }
-  .car-info h2 { font-size: 16.5px; }
-  .car-info .ch { font-size: 12px; }
-  .car-kicker { margin-bottom: 8px; font-size: 10px; letter-spacing: 0.1em; }
-  .car-acts { margin-top: 10px; gap: 7px; }
-  .car-btn { height: 32px; padding: 0 14px; font-size: 12px; }
-  .car-btn:not(.primary) { display: none; }
-  .car-meta div b { max-width: 96px; font-size: 12px; }
+  .carousel { aspect-ratio: 4 / 3; min-height: 240px; width: 100%; min-width: 0; }
+  .car-cap { left: 14px; bottom: 14px; font-size: 11px; letter-spacing: 0.12em; }
+  .car-cap em { display: none; }
+  .car-arrow { width: 34px; height: 34px; margin-top: -17px; }
+  .car-arrow.prev { left: 10px; }
+  .car-arrow.next { right: 10px; }
+  .car-dots { top: 10px; right: 10px; padding: 5px 8px; }
   /* 手机端收行距：日期头 14/20/8 → 8/14/4，行内 10→7px，行间距 10→6px。
      一屏能多看到约一条更新，桌面数值不动。 */
   .upd-day { padding: 8px 14px 4px; font-size: 13px; }  .upd-row {

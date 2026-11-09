@@ -27,6 +27,10 @@
     <div class="gate-world" id="gateWorld">
       <div class="gate-art" id="gateArt"></div>
 
+      <!-- 活背景：同一张底图，用 WebGL 让云和水面轻轻流动。
+           拿不到 WebGL 时这块不显示，下面就是静态的 .gate-art -->
+      <canvas class="gate-flow" id="gateFlow" aria-hidden="true"></canvas>
+
       <div class="gate-door" id="gateDoor">
         <!-- 门后的光：开门时铺满门洞，把画里原本那扇门盖掉 -->
         <div class="gate-halo" aria-hidden="true"></div>
@@ -80,6 +84,8 @@
   <script src="../js/data.js"></script>
   <!-- 光尘层要在 gate.js 之前就位：gate.js 一 init 就会把门的位置传给它 -->
   <script src="gate-fx.js"></script>
+  <!-- 活背景（云 / 水面流动）自己读 .gate-art 的底图，不依赖 gate.js -->
+  <script src="gate-flow.js"></script>
   <script src="gate.js"></script>
 </body>
 
