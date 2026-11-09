@@ -1,0 +1,504 @@
+/* ==========================================================================
+   gate.css · 罗生门（独立模块，只借用 base.css 的设计变量）
+   --------------------------------------------------------------------------
+   整页只有一件事：把插画里那扇门推开，走进随机一部作品。
+
+   门不是另画的图，而是「把同一张底图裁下门那一块」做成的门页：
+   底图 cover 铺满视口后，脚本算出门的像素位置，
+   再用 background-size / background-position 让门页和底图严丝合缝。
+   这样关着的时候看不出接缝，转开时才不会把画里的门留在原地。
+
+   层次：底图(world) → 门后光(hole) → 门页(leaf) → 光尘(fx) → 压暗(scrim) → 文案 → 白幕
+   ========================================================================== */
+
+body[data-page="gate"] {
+  overflow: hidden;
+  background: #0a0f15;
+}
+
+.gate {
+  position: relative;
+  height: 100vh;
+  height: 100svh;
+  overflow: hidden;
+  background: #0a0f15;
+  cursor: pointer;
+  isolation: isolate;
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* ---------- 世界：底图 + 门，推镜时整块放大 ---------- */
+.gate-world {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  perspective: 1500px;
+  perspective-origin: 50% 46%;
+  /* transform-origin 由脚本设成门心：往门里推，而不是往屏幕中心推 */
+  transform-origin: 50% 50%;
+  transition: transform 0.9s cubic-bezier(0.5, 0, 0.72, 0);
+  will-change: transform;
+}
+
+.gate.is-entering .gate-world { transform: scale(1.9); }
+
+.gate-art {
+  position: absolute;
+  inset: 0;
+  /* 兜底底图：脚本没跑起来也看得到完整画面。
+     默认给窄屏那张，宽屏再换 1440 —— 否则手机也会先白下 149KB 的桌面图 */
+  background: #0a0f15 url("img/gate-800.webp") center / cover no-repeat;
+  opacity: 0;
+  transition: opacity 0.5s var(--ease);
+}
+
+@media (min-width: 721px) {
+  .gate-art { background-image: url("img/gate-1440.webp"); }
+}
+
+.gate.is-ready .gate-art { opacity: 1; }
+
+/* ---------- 门 ---------- */
+.gate-door {
+  position: absolute;
+  opacity: 0;
+  transition: opacity 0.45s var(--ease);
+}
+
+.gate.is-ready .gate-door { opacity: 1; }
+
+/* 门后的光：平时不可见，开门瞬间铺满门洞，把画里的门盖掉 */
+.gate-hole {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  opacity: 0;
+  background:
+    radial-gradient(118% 116% at 50% 44%, #ffffff 0%, #fffdf4 56%, #fff7e8 100%);
+  /* 硬边的方块不像光：靠外发光把边界糊掉，再让整屏压白收尾 */
+  box-shadow:
+    0 0 26px 4px rgba(255, 255, 255, 0.85),
+    0 0 70px 26px rgba(255, 248, 222, 0.7),
+    0 0 150px 70px rgba(255, 240, 200, 0.4);
+  transition: opacity 0.2s linear;
+}
+
+.gate.is-open .gate-hole { opacity: 1; }
+
+/* 被抽中作品的封面，虚化成门后那束光的颜色 */
+.gate-hole-cover {
+  position: absolute;
+  inset: -18%;
+  background-position: center;
+  background-size: cover;
+  background-repeat: no-repeat;
+  filter: blur(22px) saturate(1.3);
+  opacity: 0;
+  transition: opacity 0.55s var(--ease);
+}
+
+.gate.is-open .gate-hole-cover { opacity: 0.16; }
+
+/* 门页：向外多铺 1px 吃掉亚像素接缝 */
+.gate-leaf {
+  position: absolute;
+  inset: -1px;
+  display: block;
+  padding: 0;
+  border: 0;
+  background-color: transparent;
+  background-repeat: no-repeat;
+  transform-origin: 0 50%;
+  backface-visibility: hidden;
+  cursor: pointer;
+  transition: transform 0.62s cubic-bezier(0.36, 0.05, 0.2, 1);
+  will-change: transform;
+}
+
+/* 转开时门页自己也在避光，靠一层渐变压暗 */
+.gate-leaf::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(to right, rgba(8, 12, 20, 0.34), rgba(8, 12, 20, 0) 64%);
+  opacity: 0;
+  transition: opacity 0.45s var(--ease);
+}
+
+.gate.is-open .gate-leaf { transform: rotateY(83deg); }
+.gate.is-open .gate-leaf::after { opacity: 1; }
+
+/* 门框上的溢光：只在门外侧发亮，所以压在门页下面 */
+.gate-halo {
+  position: absolute;
+  left: 50%;
+  top: 52%;
+  width: 320%;
+  height: 140%;
+  transform: translate(-50%, -50%);
+  pointer-events: none;
+  opacity: 0.34;
+  background: radial-gradient(closest-side,
+      rgba(255, 248, 222, 0.72),
+      rgba(255, 244, 204, 0.24) 44%,
+      rgba(255, 244, 204, 0) 76%);
+  mix-blend-mode: screen;
+  transition: transform 0.9s var(--ease);
+  animation: gate-breathe 6.4s ease-in-out infinite;
+}
+
+.gate.is-open .gate-halo {
+  opacity: 1;
+  animation: none;
+  transition: opacity 0.3s linear;
+}
+
+/* 门开到底：光晕跟着放大一圈，像光从门里涌出来（只动 transform，不触发布局） */
+.gate.is-entering .gate-halo {
+  transform: translate(-50%, -50%) scale(1.55);
+}
+
+@keyframes gate-breathe {
+  0%, 100% { opacity: 0.26; }
+  50% { opacity: 0.46; }
+}
+
+/* 有鼠标的设备：指到门上时，门缝的光更亮一点 */
+@media (hover: hover) {
+  .gate:hover .gate-halo { opacity: 0.5; }
+}
+
+/* ---------- 光尘层：画在门之上，和底图共用坐标，推镜时一起放大 ---------- */
+.gate-fx {
+  position: absolute;
+  inset: 0;
+  z-index: 3;
+  display: block;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 1.2s var(--ease) 0.35s;
+}
+
+.gate.is-ready .gate-fx { opacity: 1; }
+
+/* ---------- 压暗：给顶部工具条和文案留出可读的底 ---------- */
+.gate::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  pointer-events: none;
+  /* 只压到「够顶上那行字读得清」为止：再重一点，天空的光尘就被吃掉，
+     整张画会显得闷。返回按钮自己还有半透明底和模糊，不靠这层撑。 */
+  background:
+    linear-gradient(to bottom, rgba(6, 10, 16, 0.3) 0%, rgba(6, 10, 16, 0.07) 12%, rgba(6, 10, 16, 0) 24%),
+    linear-gradient(to top, rgba(6, 10, 16, 0.4) 0%, rgba(6, 10, 16, 0.09) 18%, rgba(6, 10, 16, 0) 36%);
+}
+
+/* 电影感暗角 */
+.gate::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  pointer-events: none;
+  background: radial-gradient(122% 94% at 50% 50%, rgba(0, 0, 0, 0) 56%, rgba(6, 10, 16, 0.36) 100%);
+}
+
+/* ---------- 顶部：回站内的出口 + 站点标识 ---------- */
+.gate-top {
+  position: absolute;
+  z-index: 4;
+  top: 0;
+  left: 0;
+  right: 0;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: clamp(14px, 2.6vh, 22px) clamp(18px, 4.4vw, 40px);
+  pointer-events: none;
+}
+
+.gate-top > * { pointer-events: auto; }
+
+.gate-back {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  height: 34px;
+  padding: 0 15px 0 12px;
+  border-radius: 999px;
+  font-size: 12.5px;
+  letter-spacing: 0.04em;
+  color: #fff;
+  background: rgba(12, 18, 26, 0.34);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  -webkit-backdrop-filter: blur(10px);
+  backdrop-filter: blur(10px);
+  transition: background 0.25s var(--ease), border-color 0.25s var(--ease);
+}
+
+.gate-back:hover {
+  background: rgba(12, 18, 26, 0.52);
+  border-color: rgba(255, 255, 255, 0.34);
+}
+
+.gate-back svg { width: 14px; height: 14px; }
+
+.gate-brand {
+  font-size: 11.5px;
+  letter-spacing: 0.22em;
+  color: rgba(255, 255, 255, 0.8);
+  text-shadow: 0 1px 14px rgba(6, 10, 16, 0.6);
+}
+
+/* ---------- 文案 ---------- */
+.gate-copy {
+  position: absolute;
+  z-index: 3;
+  left: clamp(20px, 4.6vw, 72px);
+  bottom: clamp(26px, 6vh, 64px);
+  max-width: min(46vw, 420px);
+  color: #fff;
+  pointer-events: none;
+  text-shadow: 0 1px 4px rgba(6, 10, 16, 0.42), 0 2px 24px rgba(6, 10, 16, 0.6);
+  opacity: 0;
+  transform: translateY(12px);
+  transition: opacity 0.7s 0.1s var(--ease), transform 0.7s 0.1s var(--ease);
+}
+
+.gate.is-ready .gate-copy { opacity: 1; transform: none; }
+
+.gate-eyebrow {
+  font-size: 10.5px;
+  font-weight: 600;
+  letter-spacing: 0.42em;
+  text-transform: uppercase;
+  opacity: 0.72;
+}
+
+.gate-title {
+  margin-top: 8px;
+  font-family: "Songti SC", "Source Han Serif SC", "Noto Serif SC", "SimSun", serif;
+  font-size: clamp(30px, 3.3vw, 44px);
+  font-weight: 600;
+  line-height: 1.1;
+  letter-spacing: 0.24em;
+}
+
+.gate-sub {
+  margin-top: 12px;
+  font-size: 13.5px;
+  line-height: 1.7;
+  letter-spacing: 0.02em;
+  opacity: 0.94;
+}
+
+/* 门下沿的提示条：位置由脚本按门算，贴在门脚下方 */
+.gate-hint {
+  position: absolute;
+  z-index: 3;
+  transform: translate(-50%, 0);
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 7px 15px 7px 13px;
+  border-radius: 999px;
+  font-size: 12.5px;
+  letter-spacing: 0.06em;
+  white-space: nowrap;
+  color: #fff;
+  background: rgba(12, 18, 26, 0.4);
+  border: 1px solid rgba(255, 255, 255, 0.24);
+  -webkit-backdrop-filter: blur(10px);
+  backdrop-filter: blur(10px);
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.6s 0.3s var(--ease);
+}
+
+.gate.is-ready .gate-hint { opacity: 1; }
+
+.gate-hint::before {
+  content: "";
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: #ffe9b0;
+  box-shadow: 0 0 0 0 rgba(255, 233, 176, 0.6);
+  animation: gate-dot 2.4s ease-out infinite;
+}
+
+@keyframes gate-dot {
+  0% { box-shadow: 0 0 0 0 rgba(255, 233, 176, 0.55); }
+  70%, 100% { box-shadow: 0 0 0 7px rgba(255, 233, 176, 0); }
+}
+
+/* 进门时文案先退场 */
+.gate.is-entering .gate-copy,
+.gate.is-entering .gate-hint,
+.gate.is-entering .gate-top {
+  opacity: 0;
+  transition-delay: 0s;
+  transition-duration: 0.3s;
+}
+
+/* ---------- 白幕 + 落点卡片 ---------- */
+.gate-veil {
+  position: absolute;
+  inset: 0;
+  z-index: 6;
+  display: grid;
+  place-items: center;
+  padding: 24px;
+  background: radial-gradient(62% 54% at 50% 44%, #fffef9 0%, #fdfbf4 44%, #f5f3ee 100%);
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+  transition: opacity 0.5s var(--ease), visibility 0.5s;
+}
+
+.gate.is-through .gate-veil {
+  opacity: 1;
+  visibility: visible;
+  pointer-events: auto;
+}
+
+.gate-card {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 16px 26px 16px 16px;
+  border-radius: 20px;
+  background: rgba(255, 255, 255, 0.78);
+  border: 1px solid rgba(20, 22, 28, 0.06);
+  box-shadow: 0 20px 46px rgba(20, 22, 28, 0.09);
+  opacity: 0;
+  transform: translateY(12px) scale(0.98);
+  transition: opacity 0.42s 0.12s var(--ease), transform 0.5s 0.12s var(--ease);
+}
+
+.gate.is-through .gate-card { opacity: 1; transform: none; }
+
+.gate-card-cover {
+  width: 66px;
+  height: 88px;
+  flex: none;
+  border-radius: 10px;
+  object-fit: cover;
+  background: var(--paper);
+  box-shadow: 0 6px 16px rgba(20, 22, 28, 0.14);
+}
+
+.gate-card-meta {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.gate-card-meta b {
+  font-size: 16px;
+  font-weight: 700;
+  line-height: 1.4;
+  max-width: 30ch;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.gate-card-meta i {
+  margin-top: 3px;
+  font-style: normal;
+  font-size: 13px;
+  color: var(--muted);
+}
+
+.gate-card-bar {
+  display: block;
+  width: 96px;
+  height: 2px;
+  margin-top: 12px;
+  border-radius: 2px;
+  background: rgba(20, 22, 28, 0.09);
+  overflow: hidden;
+}
+
+.gate-card-bar::after {
+  content: "";
+  display: block;
+  height: 100%;
+  background: var(--accent);
+  transform: scaleX(0);
+  transform-origin: left;
+}
+
+.gate.is-through .gate-card-bar::after {
+  animation: gate-bar 1.2s var(--ease) 0.12s forwards;
+}
+
+@keyframes gate-bar {
+  to { transform: scaleX(1); }
+}
+
+/* ---------- 窄屏 ---------- */
+@media (max-width: 720px) {
+  .gate-copy {
+    left: 22px;
+    right: 22px;
+    bottom: 22px;
+    max-width: none;
+  }
+
+  .gate-title {
+    font-size: 30px;
+    letter-spacing: 0.2em;
+  }
+
+  .gate-sub {
+    margin-top: 8px;
+    font-size: 12.5px;
+  }
+
+  .gate-hint {
+    font-size: 12px;
+    padding: 6px 13px 6px 11px;
+  }
+
+  .gate-brand { display: none; }
+
+  .gate-card {
+    padding: 12px 18px 12px 12px;
+    gap: 12px;
+  }
+
+  .gate-card-cover { width: 50px; height: 68px; }
+  .gate-card-meta b { font-size: 14px; max-width: 20ch; }
+}
+
+/* 横屏手机：上下没地方，文案缩到一行 */
+@media (max-height: 460px) {
+  .gate-copy { bottom: 16px; left: 18px; }
+  .gate-title { font-size: 24px; }
+  .gate-sub,
+  .gate-eyebrow { display: none; }
+}
+
+/* ---------- 减少动效：不转门、不推镜，只压白进站 ---------- */
+@media (prefers-reduced-motion: reduce) {
+  .gate-art,
+  .gate-door,
+  .gate-copy,
+  .gate-hint { transition: none; opacity: 1; }
+  .gate-copy { transform: none; }
+  .gate-world { transition: none; }
+  .gate.is-entering .gate-world { transform: none; }
+  .gate-leaf { transition: none; }
+  .gate-halo { animation: none; }
+  .gate-card { transition: none; transform: none; }
+  .gate-card-bar::after { animation: none; transform: scaleX(1); }
+  /* 光尘是纯装饰的动效，整个拿掉：脚本那边也不会启动 */
+  .gate-fx { display: none; }
+}

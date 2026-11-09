@@ -19,6 +19,8 @@
     { href: 'category.html', label: '分类', key: 'category' },
     { href: 'rank.html', label: '排行榜', key: 'rank' },
     { href: 'updates.html', label: '最近更新', key: 'fresh' },
+    // 罗生门是独立模块（public/gate/），只有这一页不在根目录
+    { href: 'gate/index.html', label: '罗生门', key: 'gate' },
     { href: 'my.html', label: '我的追漫', key: 'mine' }
   ];
 
@@ -184,15 +186,52 @@
 
     /* 滚动时切头部状态：
        首页的导航浮在首屏图上，未滚动时用深色玻璃（is-over），滚动后回到白色玻璃；
-       其余页面没有首屏大图，一直用白色玻璃。 */
+       其余页面没有首屏大图，一直用白色玻璃。
+       顺带处理「向下收起、向上放回」：只加一个 is-hidden 类，位移交给 CSS 的
+       transform，所以收起时下面的内容不会跳。三种情况不收：
+         · 已经回到页面顶部（96px 以内）
+         · 抽屉展开着，或者焦点还在导航里（搜索框正被输入）
+         · 系统开启了「减少动效」 */
     var overHero = document.body.getAttribute('data-page') === 'home';
     var threshold = overHero ? 32 : 8;
+    var reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)');
+    var lastY = window.scrollY || window.pageYOffset || 0;
+    var isHidden = false;
+
+    function setHidden(v) {
+      if (v === isHidden) return;          // 值没变就别碰 DOM
+      isHidden = v;
+      host.classList.toggle('is-hidden', v);
+    }
+
+    /** 导航正处于被操作的状态：抽屉开着，或光标停在搜索框里
+     *  这里只认输入框——鼠标点过汉堡或链接后按钮仍带着焦点，
+     *  若一并算「在用」，收起就会一直失效。 */
+    function inUse() {
+      if (drawer.classList.contains('open')) return true;
+      var el = document.activeElement;
+      return !!(el && host.contains(el) && /^(INPUT|TEXTAREA)$/.test(el.tagName));
+    }
+
     var onScroll = function () {
       var y = window.scrollY || window.pageYOffset || 0;
       host.classList.toggle('is-solid', y > threshold);
       if (overHero) host.classList.toggle('is-over', y <= threshold);
+
+      var dy = y - lastY;
+      // 4px 以内当手抖/惯性噪声忽略，lastY 不动，位移会累积到下一次判断
+      if (Math.abs(dy) < 4) return;
+      lastY = y;
+
+      if (reduceMotion.matches) { setHidden(false); return; }
+
+      if (y <= 96) setHidden(false);                         // 顶部一律露出
+      else if (dy > 0) { if (!inUse()) setHidden(true); }    // 向下：让出背景
+      else setHidden(false);                                 // 向上：立刻回来
     };
     window.addEventListener('scroll', onScroll, { passive: true });
+    // 键盘 Tab 进到导航里时立刻放回，否则焦点会落在屏幕外看不见的链接上
+    host.addEventListener('focusin', function () { setHidden(false); });
     onScroll();
   }
 

@@ -13,9 +13,23 @@
   backdrop-filter: saturate(180%) blur(18px);
   -webkit-backdrop-filter: saturate(180%) blur(18px);
   border-bottom: 1px solid rgba(20, 22, 28, 0.06);
+  /* 收起/放回只走 transform：不占布局、不触发重排，下面的内容不会跟着跳 */
+  transition: transform 0.36s var(--ease), background 0.32s var(--ease),
+    border-color 0.32s var(--ease), box-shadow 0.32s var(--ease);
 }
 
 .site-header.is-solid { box-shadow: var(--shadow-sm); }
+
+/* 向下滚动时整条移出视口，把背景让出来；向上滚动由 JS 摘掉这个类放回 */
+.site-header.is-hidden {
+  transform: translate3d(0, -100%, 0);
+  box-shadow: none;
+}
+
+/* 系统要求减少动效：不做位移（JS 也不会加 is-hidden），导航常驻 */
+@media (prefers-reduced-motion: reduce) {
+  .site-header { transition: none; }
+}
 
 /* ---------- 首页：导航浮在首屏图之上，深色磨砂玻璃 ----------
    位置用 fixed 让首屏图从视口顶端开始铺，导航半透明压在图上；
@@ -24,8 +38,9 @@ body[data-page="home"] .site-header {
   position: fixed;
   left: 0;
   right: 0;
-  transition: background 0.32s var(--ease), border-color 0.32s var(--ease),
-    box-shadow 0.32s var(--ease);
+  /* 这里整套覆盖过渡，transform 必须一起写上，否则首页收起时是硬切 */
+  transition: transform 0.36s var(--ease), background 0.32s var(--ease),
+    border-color 0.32s var(--ease), box-shadow 0.32s var(--ease);
 }
 
 body[data-page="home"] .site-header.is-over {

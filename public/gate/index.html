@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <!-- 内容是第三方素材索引，不参与搜索引擎收录 -->
+  <meta name="robots" content="noindex, nofollow">
+  <title>罗生门 · 余音的小破站</title>
+  <meta name="description" content="推开罗生门，随机走进一部没读过的漫画。">
+  <meta name="theme-color" content="#0a0f15">
+
+  <!-- 这是一个独立模块：样式和脚本都在本目录，只借用全站的设计变量 -->
+  <link rel="stylesheet" href="../css/base.css">
+  <link rel="stylesheet" href="gate.css">
+  <link rel="icon" href="../imgs/offen/favicon.png" sizes="any">
+
+  <!-- 底图按屏幕宽度二选一，只下载用得上的那张 -->
+  <link rel="preload" as="image" href="img/gate-1440.webp" media="(min-width: 721px)">
+  <link rel="preload" as="image" href="img/gate-800.webp" media="(max-width: 720px)">
+</head>
+
+<!-- 罗生门：整页只有一扇门，逻辑见同目录 gate.js -->
+<body data-page="gate">
+  <main class="gate" id="gate">
+    <!-- 底图 + 门。推镜时整块放大，所以门和底图必须同一个坐标系 -->
+    <div class="gate-world" id="gateWorld">
+      <div class="gate-art" id="gateArt"></div>
+
+      <div class="gate-door" id="gateDoor">
+        <!-- 门后的光：开门时铺满门洞，把画里原本那扇门盖掉 -->
+        <div class="gate-halo" aria-hidden="true"></div>
+        <div class="gate-hole" aria-hidden="true">
+          <span class="gate-hole-cover" id="gateHoleCover"></span>
+        </div>
+        <!-- 门页：同一张底图裁下门那一块，绕左边缘转开 -->
+        <button class="gate-leaf" id="gateLeaf" type="button"
+          aria-label="推开罗生门，随机进入一部漫画"></button>
+      </div>
+
+      <!-- 光尘：天空的浮尘、门缝的暖光、水面的碎光。画在最上层，
+           和底图共用一套坐标，推镜时一起放大 -->
+      <canvas class="gate-fx" id="gateFx" aria-hidden="true"></canvas>
+    </div>
+
+    <!-- 没有站内导航：只留一个回得去的出口和站点标识 -->
+    <div class="gate-top">
+      <a class="gate-back" href="../index.html">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+          stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <path d="M19 12H6M11 6l-6 6 6 6" />
+        </svg>
+        返回站点
+      </a>
+      <span class="gate-brand">余音的小破站</span>
+    </div>
+
+    <div class="gate-copy">
+      <p class="gate-eyebrow">Rashomon</p>
+      <h1 class="gate-title">罗生门</h1>
+      <p class="gate-sub">门后没有答案，只有一部没读过的漫画。</p>
+    </div>
+
+    <p class="gate-hint" id="gateHint" aria-hidden="true">点击那扇门</p>
+
+    <!-- 白幕：门推开后压白，交代一句落点，再进详情页 -->
+    <div class="gate-veil" id="gateVeil" aria-hidden="true">
+      <div class="gate-card">
+        <img class="gate-card-cover" id="gateCardCover" alt="" width="58" height="78">
+        <div class="gate-card-meta">
+          <b id="gateCardTitle">正在推门…</b>
+          <i>穿过罗生门</i>
+          <span class="gate-card-bar"></span>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <!-- 作品清单：和站内共用同一份数据 -->
+  <script src="../js/data.js"></script>
+  <!-- 光尘层要在 gate.js 之前就位：gate.js 一 init 就会把门的位置传给它 -->
+  <script src="gate-fx.js"></script>
+  <script src="gate.js"></script>
+</body>
+
+</html>
