@@ -34,6 +34,10 @@
       YY.card.reveal();
     }
     if (YY.mascot) YY.mascot.init();
+    // 诗句背景的动态层（发随风动 + 浮光）要在诗句之前启动，进度才能一帧不丢
+    if (YY.poemFx && YY.poemFx.init) YY.poemFx.init();
+    // 尾屏诗句：只有「我的追漫」有这一段，其余页面取不到节点会直接返回
+    if (YY.poem) YY.poem.init();
 
     if (route && YY.pages[route.page]) {
       YY.pages[route.page].init();

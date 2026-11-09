@@ -79,6 +79,37 @@
         </div>
       </div>
     </section>
+
+    <!-- 尾屏：滚到这里后整块钉住，四列诗句按滚动进度逐字浮现，滚满才放开。
+         逻辑见 js/ui/poem.js，画面动态层见 js/ui/poem-fx.js，样式见 css/pages.css。
+         视觉部分对读屏隐藏，整首诗由上面的 sr-only 段落提供，避免逐字朗读被打断。 -->
+    <section class="poem" id="poem">
+      <p class="sr-only">柳永《蝶恋花》：伫倚危楼风细细，望极春愁，衣带渐宽终不悔，为伊消得人憔悴。</p>
+      <div class="poem-pin" aria-hidden="true">
+        <!-- 静态底图：脚本没接上、或者禁用 WebGL 时，看到的就是这张 -->
+        <div class="poem-bg"></div>
+        <!-- 动态层：头发随风摆动 + 浮光粒子，加载成功后淡入盖住底图 -->
+        <canvas class="poem-fx" id="poemFx"></canvas>
+        <div class="poem-veil"></div>
+
+        <!-- DOM 顺序 = 阅读顺序，视觉上由 .poem-stage 的 row-reverse 摆成右起 -->
+        <div class="poem-stage">
+          <p class="poem-line" data-poem-line>伫倚危楼风细细</p>
+          <p class="poem-line" data-poem-line>望极春愁</p>
+          <p class="poem-line" data-poem-line>衣带渐宽终不悔</p>
+          <p class="poem-line is-major" data-poem-line>为伊消得人憔悴</p>
+        </div>
+
+        <p class="poem-credit" data-poem-credit>柳永 · 蝶恋花</p>
+
+        <p class="poem-hint" data-poem-hint>
+          向下滚动
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path d="M12 5v13M6 12l6 6 6-6" />
+          </svg>
+        </p>
+      </div>
+    </section>
   </main>
 
   <footer id="app-footer"></footer>
@@ -89,6 +120,8 @@
   <script src="js/ui/footer.js"></script>
   <script src="js/ui/card.js"></script>
   <script src="js/ui/mascot.js"></script>
+  <script src="js/ui/poem.js"></script>
+  <script src="js/ui/poem-fx.js"></script>
   <script src="js/pages/my.js"></script>
   <script src="js/app.js"></script>
 </body>

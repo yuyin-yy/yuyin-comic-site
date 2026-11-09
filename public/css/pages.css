@@ -448,15 +448,105 @@
   align-items: start;
 }
 
+/* 主封面 = 一圈银框 + 里面的画面。框由 padding 撑开，背景是金属渐变。
+   悬停时整张卡随指针轻微旋转（js/ui/tilt.js 逐帧写 transform），
+   指针处点一盏冷白反光，--gx / --gy 由脚本更新。 */
 .detail-cover {
+  --frame: 10px;
+  --gx: 50%;
+  --gy: 50%;
   position: relative;
+  padding: var(--frame);
   border-radius: var(--radius);
   overflow: hidden;
   aspect-ratio: 3 / 4;
-  box-shadow: 0 24px 60px rgba(0, 0, 0, 0.4);
+  /* 银色装裱边。渐变铺满整块画布，只在边框那一圈露出来，
+     所以明暗必须压在首尾两端，否则 262px 的跨度走完，边框还是纯白一片：
+       竖直 → 上边近白、下边压灰；横向 → 左右各压一道暗边，金属才有厚度 */
+  background:
+    linear-gradient(
+      90deg,
+      rgba(255, 255, 255, 0.3) 0,
+      rgba(255, 255, 255, 0) 4%,
+      rgba(255, 255, 255, 0) 92%,
+      rgba(94, 104, 122, 0.34) 100%
+    ),
+    linear-gradient(
+      180deg,
+      #ffffff 0%,
+      #f1f4f9 2%,
+      #ccd3de 6%,
+      #bec6d2 48%,
+      #98a2b2 100%
+    );
+  box-shadow:
+    inset 0 1px 0 #ffffff,
+    inset 0 -1px 0 rgba(78, 86, 102, 0.55),
+    inset 1px 0 0 rgba(255, 255, 255, 0.6),
+    inset -1px 0 0 rgba(86, 94, 110, 0.4),
+    0 0 0 1px rgba(255, 255, 255, 0.34),
+    0 26px 60px -22px rgba(0, 0, 0, 0.75),
+    0 4px 14px -6px rgba(0, 0, 0, 0.5);
+  transition: box-shadow 0.4s var(--ease);
 }
 
-.detail-cover img { width: 100%; height: 100%; object-fit: cover; }
+.detail-cover img {
+  position: relative;
+  z-index: 1;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: calc(var(--radius) - var(--frame));
+}
+
+/* 画面与装裱边之间的一道暗线：画面像嵌进框里，而不是浮在框上 */
+.detail-cover::after {
+  content: "";
+  position: absolute;
+  inset: var(--frame);
+  z-index: 3;
+  border-radius: calc(var(--radius) - var(--frame));
+  box-shadow:
+    inset 0 0 0 1px rgba(8, 10, 16, 0.48),
+    inset 0 3px 12px rgba(8, 10, 16, 0.28);
+  pointer-events: none;
+}
+
+/* 跟随指针的冷白反光：滤色只提亮不压暗，读成玻璃反光而不是一层白雾 */
+.detail-cover::before {
+  content: "";
+  position: absolute;
+  inset: var(--frame);
+  z-index: 2;
+  border-radius: calc(var(--radius) - var(--frame));
+  /* 半径收到 96%：再大就铺满整张图，脸也一起洗白，读成白雾而不是反光 */
+  background: radial-gradient(
+    96% 96% at var(--gx, 50%) var(--gy, 50%),
+    rgba(214, 231, 255, 0.55),
+    rgba(206, 224, 252, 0.1) 26%,
+    rgba(206, 224, 252, 0) 50%
+  );
+  mix-blend-mode: screen;
+  opacity: 0;
+  transition: opacity 0.3s var(--ease);
+  pointer-events: none;
+}
+
+.detail-cover:hover::before,
+.detail-cover.is-tilt::before { opacity: 1; }
+
+/* 悬停时投影拉开，封面像被举到灯下 */
+.detail-cover:hover,
+.detail-cover.is-tilt {
+  box-shadow:
+    inset 0 1px 0 #ffffff,
+    inset 0 -1px 0 rgba(78, 86, 102, 0.55),
+    inset 1px 0 0 rgba(255, 255, 255, 0.7),
+    inset -1px 0 0 rgba(86, 94, 110, 0.4),
+    0 0 0 1px rgba(255, 255, 255, 0.46),
+    0 44px 96px -26px rgba(0, 0, 0, 0.9),
+    0 12px 28px -8px rgba(0, 0, 0, 0.6);
+}
 
 .detail-info { color: #fff; padding-top: 6px; }
 
@@ -1029,3 +1119,258 @@
 .my-empty .ico svg { width: 26px; height: 26px; }
 .my-empty h2 { font-size: 18px; font-weight: 700; }
 .my-empty p { margin: 8px 0 22px; color: var(--muted); font-size: 14px; }
+
+/* ---------- 尾屏诗句（我的追漫 · 滚动浮字） ---------- */
+/* 结构：.poem 撑出滚动行程 → .poem-pin 用 sticky 钉住一屏，里面四层叠着：
+     .poem-bg     静态插画（兜底，任何情况下都有画面）
+     #poemFx      WebGL 动态层（发随风动 + 浮光粒子），脚本先把它藏起来
+     .poem-veil   左暗右透的渐变压暗，保证白色行楷压得住亮天的云
+     .poem-stage  四列竖排白字，靠左，避开右边的人物
+   滚动进度由 js/ui/poem.js 换算后逐字写透明度，同时喂给动态层加风。 */
+
+/* 行楷字体：马善政毛笔楷书（SIL OFL 1.1）。子集只含这首诗用到的 30 个字，14KB；
+   要改诗句就改 tools/fetch_poem_font.py 里的 CHARS 重跑一次。 */
+@font-face {
+  font-family: 'PoemKai';
+  src: url("../fonts/mashanzheng.woff2") format("woff2");
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
+.poem {
+  height: 260vh;
+  background: #0a2a52;
+}
+
+.poem-pin {
+  position: sticky;
+  top: 0;
+  display: flex;
+  align-items: center;
+  height: 100vh;
+  height: 100svh;
+  /* 顶部导航是浮层、左下角有站娘，两头都留出位置再居中，
+     主句才不会顶到导航或被气泡压住 */
+  padding-top: var(--nav-h);
+  padding-bottom: 104px;
+  overflow: hidden;
+  background: #0a2a52;
+}
+
+/* 底图：默认给 1280 那档，宽屏再换 1920，手机换竖裁版 */
+.poem-bg {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  background-color: #0a2a52;
+  background-image: url("../imgs/poem/poem-bg-1280.webp");
+  background-size: cover;
+  background-position: 50% 44%;
+  background-repeat: no-repeat;
+}
+
+@media (min-width: 1281px) {
+  .poem-bg { background-image: url("../imgs/poem/poem-bg-1920.webp"); }
+}
+
+/* 动态层：接管前完全透明，静态底图就是最终画面 */
+.poem-fx {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  display: block;
+  width: 100%;
+  height: 100%;
+  opacity: 0;
+  transition: opacity 1s var(--ease);
+  pointer-events: none;
+}
+.poem-fx.is-on { opacity: 1; }
+
+/* 压暗：左重右无，把文字区压下去、把人物留出来 */
+.poem-veil {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  pointer-events: none;
+  background:
+    linear-gradient(90deg,
+      rgba(5, 20, 46, 0.52) 0%,
+      rgba(5, 20, 46, 0.34) 22%,
+      rgba(5, 20, 46, 0.11) 46%,
+      rgba(5, 20, 46, 0) 64%),
+    linear-gradient(0deg,
+      rgba(4, 16, 38, 0.38) 0%,
+      rgba(4, 16, 38, 0) 22%);
+}
+
+/* 竖排、右起（DOM 顺序即阅读顺序，row-reverse 把第一列摆到最右），整体靠左 */
+.poem-stage {
+  position: relative;
+  z-index: 3;
+  display: flex;
+  flex-direction: row-reverse;
+  align-items: center;      /* 四列以最长的一列为基准垂直居中，短列不会孤零零吊在顶上 */
+  gap: clamp(22px, 2.7vw, 46px);
+  margin-right: auto;
+  padding-left: clamp(24px, 6.4vw, 118px);
+  padding-top: 1.5vh;
+}
+
+.poem-line {
+  margin: 0;
+  writing-mode: vertical-rl;
+  font-family: 'PoemKai', 'STXingkai', 'KaiTi', serif;
+  font-size: 42px;
+  line-height: 1.04;
+  letter-spacing: 0.16em;
+  font-weight: 400;
+  color: rgba(255, 255, 255, 0.9);
+  /* 行楷笔画瘦硬，靠一层深色外发光把它从亮天空里拔出来 */
+  text-shadow:
+    0 2px 22px rgba(3, 16, 40, 0.62),
+    0 1px 4px rgba(3, 16, 40, 0.42);
+}
+
+/* 每个字独立位移，必须是 inline-block，否则 transform 在竖排里不生效 */
+.poem-ch {
+  display: inline-block;
+  transform: translate3d(0, 16px, 0);
+}
+
+/* 主句：字号拉开一档，是整屏的落点 */
+.poem-line.is-major {
+  /* 竖排高度 = 字数 × 字号，跟视口高度挂钩，矮屏（笔记本）自动收一档 */
+  font-size: min(86px, 9.2vh);
+  letter-spacing: 0.06em;
+  color: #fff;
+  text-shadow:
+    0 4px 34px rgba(3, 16, 40, 0.68),
+    0 1px 5px rgba(3, 16, 40, 0.45);
+}
+
+/* 前几列被 JS 压暗后，鼠标靠近可以临时提亮，方便回看 */
+.poem-line:hover { opacity: 1 !important; }
+
+.poem-credit,
+.poem-hint {
+  position: absolute;
+  z-index: 3;
+  /* 左下角留给站娘，署名与滚动提示靠右下，也别压到人物 */
+  right: clamp(24px, 6.4vw, 118px);
+  bottom: 40px;
+  white-space: nowrap;
+  font-size: 12.5px;
+  letter-spacing: 0.3em;
+  color: rgba(255, 255, 255, 0.72);
+  text-shadow: 0 2px 14px rgba(3, 16, 40, 0.7);
+}
+
+.poem-hint {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  letter-spacing: 0.16em;
+  color: rgba(255, 255, 255, 0.6);
+}
+.poem-hint svg {
+  width: 14px;
+  height: 14px;
+  animation: poemBob 1.9s var(--ease) infinite;
+}
+
+@keyframes poemBob {
+  0%, 100% { transform: translateY(-2px); }
+  50%      { transform: translateY(3px); }
+}
+
+/* ---------- 尾屏诗句 · 断点 ---------- */
+/* 平板（721~1280）与桌面同一套效果，只是字号跟着屏宽略收，不改版面 */
+
+/* 竖屏平板：横图放不进竖屏，取景右移让整个人物留在画面里，
+   左边压着头发的那几列再靠压暗层兜住 */
+@media (min-width: 721px) and (max-aspect-ratio: 1/1) {
+  .poem-bg { background-position: 68% 42%; }
+}
+
+@media (max-width: 720px) {
+  .poem { height: 230vh; }
+
+  /* 手机只留左边那块天：竖裁图把人物整个裁掉，文字还在同一位置 */
+  .poem-bg {
+    background-image: url("../imgs/poem/poem-bg-m.webp");
+    background-position: left center;
+  }
+
+  /* 竖屏窄，渐变改成竖向为主，保证字压得住 */
+  .poem-veil {
+    background:
+      linear-gradient(90deg,
+        rgba(5, 20, 46, 0.66) 0%,
+        rgba(5, 20, 46, 0.34) 46%,
+        rgba(5, 20, 46, 0) 82%),
+      linear-gradient(0deg,
+        rgba(4, 16, 38, 0.5) 0%,
+        rgba(4, 16, 38, 0) 26%);
+  }
+
+  .poem-pin { padding-bottom: 72px; }
+  .poem-stage {
+    gap: 15px;
+    padding-left: 26px;
+    padding-top: 0;
+  }
+  .poem-line { font-size: 22px; letter-spacing: 0.1em; }
+  .poem-line.is-major { font-size: min(40px, 6.2vh); letter-spacing: 0.04em; }
+
+  .poem-credit, .poem-hint { right: 22px; bottom: 22px; font-size: 12px; }
+}
+
+@media (max-width: 380px) {
+  .poem-line { font-size: 20px; }
+  .poem-line.is-major { font-size: 36px; }
+  .poem-stage { gap: 12px; }
+}
+
+/* 横屏手机：高度不够，整组按比例缩一档 */
+@media (max-height: 560px) {
+  .poem-line { font-size: 20px; }
+  .poem-line.is-major { font-size: 34px; }
+  .poem-credit, .poem-hint { bottom: 18px; }
+}
+
+/* 矮屏笔记本（1440×900 以下的 16:9）：高度被压，主句收一档并整体上提，
+   否则最后一列会贴到左下角站娘的气泡上。
+   必须限定 min-width，否则 360×780 这类手机也会命中，主句被放大到 60px 顶满屏幕。 */
+@media (min-width: 721px) and (min-height: 561px) and (max-height: 800px) {
+  .poem-pin { padding-bottom: 128px; }
+  .poem-line.is-major { font-size: min(86px, 8.0vh); }
+}
+
+/* 系统开启「减少动效」：不钉屏、不跑动态层，整段静态呈现 */
+@media (prefers-reduced-motion: reduce) {
+  /* 不钉屏后 .poem-pin 变成 static，底图与压暗层要重新挂到 .poem 上才不跑位 */
+  .poem { height: auto; position: relative; }
+  .poem-pin {
+    position: static;
+    height: auto;
+    min-height: 78vh;
+    padding: 108px 0 96px;
+    flex-direction: column;      /* 署名要排到诗句下面，不能并排 */
+    align-items: flex-start;
+  }
+  .poem-line { opacity: 1 !important; transform: none !important; }
+  /* 站娘固定在左下角，静态排版时署名改靠右，免得被压在气泡底下 */
+  .poem-credit {
+    position: static;
+    transform: none;
+    align-self: flex-end;
+    margin: 40px clamp(24px, 6.4vw, 118px) 0 0;
+    left: auto;
+    right: auto;
+    bottom: auto;
+  }
+  .poem-hint { display: none; }
+  .poem-fx { display: none; }
+}
