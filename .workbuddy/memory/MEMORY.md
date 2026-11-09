@@ -15,6 +15,7 @@ public/
 │  ├─ filter.css       分类页：暗色页头 + 五行筛选卡片 + 分页
 │  ├─ rank.css         排行榜：三栏（冠军海报/榜单表/题材与说明）
 │  ├─ updates.css      最近更新：3 秒轮播 + 本周热门 + 季度内列表 + 更早卡片墙
+│  ├─ orb.css          封面球：舞台/卡片/标题/提示条（含自己的断点）
 │  └─ responsive.css   断点 1180 / 1080 / 900 / 720 / 460（+359）
 ├─ js/
 │  ├─ core.js          命名空间 YY：DOM/转义/参数/收藏/登录态/Toast/图标/fmtHeat
@@ -22,12 +23,55 @@ public/
 │  ├─ ui/nav.js        导航 + 搜索联想 + 随机一部 + 抽屉 + 登录态
 │  ├─ ui/footer.js     页脚（站点说明 + 联系声明，不放分类/题材链接）
 │  ├─ ui/card.js       卡片/网格/榜单/追漫按钮/滚动进场
+│  ├─ ui/orb.js        首页「最近更新」封面球（拖动旋转 / 滚轮摊平成网格）
+│  ├─ ui/tilt.js       详情页「主封面」：3D 倾斜 + 跟随光泽（银框）
 │  ├─ ui/mascot.js     左下角站娘：表情按钮收起弹出、打字机气泡、台词池
 │  ├─ pages/*.js       home / category / rank / updates / detail / auth / my
 │  └─ app.js           按 body[data-page] 分发，加载公共组件
 └─ index.html / category.html / rank.html / updates.html / index02.html / Login.html / my.html
 ```
-- 导航顺序：首页 / 分类 / 排行榜 / 最近更新 / 我的追漫（「全部漫画」页已删除，由分类页取代）。
+- 导航顺序：首页 / 分类 / 排行榜 / 最近更新 / **罗生门** / 我的追漫（「全部漫画」页已删除，由分类页取代）。
+- 详情页**左侧主封面**（`.detail-cover`）是银框 + 3D 倾斜：`ui/tilt.js` 写 `--gx/--gy`
+  与 transform，样式在同名规则（`pages.css` 详情页段）。银框由 `padding: var(--frame)` +
+  金属渐变背景撑出来，`--frame` 桌面 10 / ≤900 8 / ≤720 6。
+  底部「相关推荐」卡片保持原样（之前误加在这批 `.card` 上，已撤）。
+- 首页底部「最近更新」是一颗封面球（`YY.orb`）：拖动旋转，滚轮或标题右侧的分段按钮摊平成网格；
+  平铺只铺 4 行（窄屏 6 行），多出来的封面原地淡出。调球体看 `js/ui/orb.js` 顶部常量与 `layout()`。
+
+## 罗生门模块（public/gate/，2026-11-08）
+独立成块，不按分层拆：`index.html` + `gate.css` + `gate.js` + `gate-fx.js` + `img/`（1440 / 800 两档）。
+不引 nav/footer/core.js，只读 `window.COMICS`；落地跳 `../index02.html?id=`。
+- 页面是整屏插画 + 一扇门：门页 = 同一张底图裁下门那块，`background-position`
+  必须减**整图在视口里的原点**（不是门的坐标），否则窄屏整块错位。
+- 门框比例常量在 `gate.js` 顶部 `DOOR`（原图 1600×1000 上量：704,365→908,778）。
+- 无站内导航，只有一个「返回站点」；顶部 `.gate-top` 的点击不参与推门。
+- 导航 6 项后在 1081~1140 会挤，`responsive.css` 开头用 1140 提前收抽屉。
+
+### 光尘层 gate-fx.js（Canvas 2D，桌面 532 / 手机 300 颗）
+`<canvas class="gate-fx">` 放在 `.gate-world` 里门之后（跟推镜一起缩放），
+`pointer-events:none`。`GateFx.setDoor(门矩形)` / `GateFx.burst()` 由 `gate.js` 调，
+另有 `GateFx.debug(k)` 吐某层每颗坐标用于核对。九类粒子：
+1 天空浮尘 / 2 水面碎光 / 3 门缝光尘 / 4 大虚焦光斑 / 5 水面波纹 / 6 门框柔光 /
+7 水面波光带 / 8 天空流雾 / 9 绕门丝带。
+- **必须分两遍画**：柔光（4/5/6/7/8）用 `lighter`，实点（1/2/3/9）用 `source-over`。
+  全用加光时金色会被顶成纯白，白点落在白门板/浅蓝天上等于隐形。
+- 贴图三套：`dot`（实心核大，小点用）/ `halo`（柔，大光斑用）/
+  `orb`（亮核 + 淡暗边 0.34，环绕珠用）。64px 渐变缩到 2px 会稀释 alpha。
+- **环绕丝带**：一条 22 颗共享角度和呼吸相位（各闪会把弧切碎），外圈 7 条均匀铺开、
+  rad 收拢在 0.9~1.04（散开就露缺口），内流 3 条从 rad 0.3 螺旋吸入。
+  轨道横向 1 门宽、纵向 0.72 门高 —— 门瘦长，纵向半径小于半门高就全压在门板上。
+  珠子要「间距 < 可见直径（约 0.6 倍设定值）」才连成弧；桌面 11~15px、手机 6.5~9px。
+- 速度单位是 **px/秒**，写每帧 0.05px 等于每秒 3px（看着像没动）。
+  另有全局气流 `skyWind()` / `waterFlow()` 给所有粒子共享，整片空气才「在动」。
+- 水面高度按门反推（`door.y - door.h*0.05`），不要写 `H*0.4`：cover 裁切时比例会变。
+- 手机 `lite = 掉帧 || W <= 720`；掉帧兜底：头 45 帧平均 >26ms 降 DPR 到 1 并减粒子。
+  `prefers-reduced-motion` 下 CSS `display:none` + 脚本不启动。
+- **`sizeCanvas` 不能只信 `canvas.clientWidth`**：CSS 未生效时它返回内在宽度 300
+  （不是 0），`|| innerWidth` 兜底救不到，画布会按 300×150 建起来再被拉伸。
+  小于视口九成一律不认。`setDoor` 可能比本文件先跑（`window.GateFx` 还没定义），
+  所以要有 `hasDoorParts` 补建 + dispatch resize 兜底。
+
+
 
 ## 模块约定
 - 依赖方向：`pages/* → ui/* → core.js`，反向不引用；跨模块只通过 `window.YY`。
@@ -58,6 +102,18 @@ updated/desc/**hasChs**/**pending**/readUrl/detailUrl/srcId/chs
 - `guazi_loop.py`：**已弃用**（依赖会被 403 的 urllib 链路），保留作历史参考。
 - `build_data.py`：`data/guazi_comics.json` → `public/js/data.js`（编号、chapterNo、hasChs、pending、排序）。
 - `compress_covers.py`：封面转 webp(320w,q82)，约 25KB/张；需系统 Python（D:\Python39 有 Pillow）。
+- `shot.js`：**本地截图/验收工具**，连 CDP 用 `Emulation.setDeviceMetricsOverride`
+  钉死视口再截（无头 Chrome 的 `--window-size` 与实际视口差 150px 左右，会看错版式）。
+  `node tools/shot.js --url … --w 1440 --h 900 --out .tmp/a.png`；
+  另有 `--touch`（DPR2 手机）/`--click`/`--eval`/`--wait`/`--probe`/
+  `--shots N --gap ms`（同一次加载连拍，做帧间差分）/`--reduce`（模拟减少动效）。
+  **三个会骗人的默认行为，别再踩**：
+  1. CDP 新建的标签是后台页，rAF 与 CSS 过渡全暂停 —— 必须 `Page.bringToFront`，
+     否则截出来永远是第一帧，差分会得到「天空水面完全静止」的假结论；
+  2. `--wait` 以前只挂在 `--eval`/`--click` 上，单纯截图会在导航后 1.8s 就按快门，
+     带 opacity 过渡的图层还是透明的，会被误判成「根本没画」—— 现在无条件生效；
+  3. 复用 user-data-dir 会缓存 js/css，改完参数截图毫无反应 —— 已 `setCacheDisabled`。
+  probe 也已挪到截图**之前**，保证读到的状态就是画面上的状态。
 - 旧数据快照：`data/legacy_manhua3.json`（200 部，来自 manhua3，链接多已失效）。
 - manhua3 那套脚本（scrape_manhua3/scan_cache/localize_covers）保留但不再使用。
 - 现状（2026-11-01）：590 部全部有详情/简介/评分/章节，data.js 约 1.0MB（gzip 后 255KB，
